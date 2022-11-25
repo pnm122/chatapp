@@ -1,6 +1,7 @@
 import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/pages/chat_room.dart';
 import 'package:chatapp/service/auth_service.dart';
+import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/widgets/widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -111,8 +112,7 @@ class _SignInFormState extends State<SignInForm> {
                   await _auth.signInAnonymously(displayName)
                     .then((value) async {
                       if(value != null) {
-                        await HelperFunctions.saveUserLoggedInStatus(true);
-                        await HelperFunctions.saveDisplayName(displayName);
+                        DatabaseService().alertLogIn();
                         pushScreenReplace(context, const ChatRoom());
                       } else {
                         setState(() { _isLoading = false; });

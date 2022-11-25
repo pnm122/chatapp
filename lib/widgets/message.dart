@@ -1,28 +1,47 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chatapp/helper/helper_functions.dart';
+import 'package:chatapp/consts.dart';
 
 class Message extends StatelessWidget {
   const Message({super.key, required this.sender, required this.message, required this.timeStamp});
   final String sender;
   final String message;
-  final String timeStamp;
+  final int timeStamp;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: MediaQuery.of(context).size.width,
-      padding: const EdgeInsets.all(5.0),
+      padding: Consts.messagePadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(
             children: [
-              Text(sender),
-              // Todo: use correct timeStamping and get time from timeStamp
-              Expanded(child: Text(timeStamp, textAlign: TextAlign.end),)
+              Text(
+                sender.toUpperCase(),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              // TODO: use correct timeStamping and get time from timeStamp
+              Expanded(
+                child: Text(
+                  Timestamp.fromMillisecondsSinceEpoch(timeStamp).toDate().toString(), 
+                  textAlign: TextAlign.end,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              )
             ],
           ),
-          Text(message),
+
+          const SizedBox(height:3.0),
+
+          Container(
+            decoration: BoxDecoration(
+              border: Border(left: BorderSide(width: 2.0))
+            ),
+            padding: const EdgeInsets.only(left: 3.0, top: 3.0, bottom: 3.0),
+            child: Text(message)
+          ),
         ],
       ),
     );

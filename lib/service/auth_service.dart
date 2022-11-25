@@ -9,6 +9,8 @@ class AuthService {
     try {
       User user = (await firebaseAuth.signInAnonymously()).user!;
       DatabaseService(uid: user.uid).updateUserData(displayName);
+      await HelperFunctions.saveUserLoggedInStatus(true);
+      await HelperFunctions.saveDisplayName(displayName);
       return user;
 
     } on FirebaseAuthException catch(e) {

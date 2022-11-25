@@ -1,6 +1,7 @@
 import 'package:chatapp/pages/login_page.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/service/database_service.dart';
+import 'package:chatapp/widgets/alert.dart';
 import 'package:chatapp/widgets/message.dart';
 import 'package:chatapp/widgets/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,9 +35,22 @@ class _ChatRoomState extends State<ChatRoom> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        StreamBuilder(
+    return Scaffold(
+      appBar: AppBar(
+        actions: <Widget>[
+          ElevatedButton(
+            onPressed: () {
+              DatabaseService().alertLogOut();
+              authService.signOut();
+              pushScreenReplace(context, const LoginPage());
+            },
+            child: const Text("Log out"),
+          ),
+        ]
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: StreamBuilder(
           stream: messages,
           builder:(context, AsyncSnapshot snapshot) {
             return snapshot.hasData
@@ -45,26 +59,23 @@ class _ChatRoomState extends State<ChatRoom> {
                 shrinkWrap: true,
                 itemCount: snapshot.data.docs.length,
                 itemBuilder: (context, index) {
-                  return Message(
-                    sender: snapshot.data.docs[index]["sender"],
-                    message: snapshot.data.docs[index]["message"],
-                    timeStamp: snapshot.data.docs[index]["timeStamp"],
-                  );
+                  return snapshot.data.docs[index]["isAlert"] 
+                    ? Alert(
+                      sender: snapshot.data.docs[index]["sender"],
+                      message: snapshot.data.docs[index]["message"],
+                      timeStamp: snapshot.data.docs[index]["timeStamp"],
+                    ) 
+                    : Message(
+                      sender: snapshot.data.docs[index]["sender"],
+                      message: snapshot.data.docs[index]["message"],
+                      timeStamp: snapshot.data.docs[index]["timeStamp"],
+                    );
                 },
               )
             : const Text("No data");
           },
         ),
-        Center(
-          child: ElevatedButton(
-            onPressed: () {
-              authService.signOut();
-              pushScreenReplace(context, const LoginPage());
-            },
-            child: Text("Log out"),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
