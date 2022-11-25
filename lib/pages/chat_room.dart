@@ -59,34 +59,31 @@ class _ChatRoomState extends State<ChatRoom> {
           ),
         ]
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: StreamBuilder(
-          stream: messages,
-          builder:(context, AsyncSnapshot snapshot) {
-            return snapshot.hasData
-            ? ListView.builder(
-                scrollDirection: Axis.vertical,
-                shrinkWrap: true,
-                itemCount: snapshot.data.docs.length,
-                itemBuilder: (context, index) {
-                  return snapshot.data.docs[index]["isAlert"] 
-                    ? Alert(
-                      sender: snapshot.data.docs[index]["sender"],
-                      message: snapshot.data.docs[index]["message"],
-                      timeStamp: snapshot.data.docs[index]["timeStamp"],
-                    ) 
-                    : Message(
-                      sender: snapshot.data.docs[index]["sender"],
-                      message: snapshot.data.docs[index]["message"],
-                      timeStamp: snapshot.data.docs[index]["timeStamp"],
-                      currentDisplayName: loggedInDisplayName,
-                    );
-                },
-              )
-            : const Text("No data");
-          },
-        ),
+      body: StreamBuilder(
+        stream: messages,
+        builder:(context, AsyncSnapshot snapshot) {
+          return snapshot.hasData
+          ? ListView.builder(
+              scrollDirection: Axis.vertical,
+              shrinkWrap: true,
+              itemCount: snapshot.data.docs.length,
+              itemBuilder: (context, index) {
+                return snapshot.data.docs[index]["isAlert"] 
+                  ? Alert(
+                    sender: snapshot.data.docs[index]["sender"],
+                    message: snapshot.data.docs[index]["message"],
+                    timeStamp: snapshot.data.docs[index]["timeStamp"],
+                  ) 
+                  : Message(
+                    sender: snapshot.data.docs[index]["sender"],
+                    message: snapshot.data.docs[index]["message"],
+                    timeStamp: snapshot.data.docs[index]["timeStamp"],
+                    currentDisplayName: loggedInDisplayName,
+                  );
+              },
+            )
+          : Container();
+        },
       ),
     );
   }

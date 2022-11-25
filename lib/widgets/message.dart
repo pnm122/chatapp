@@ -12,47 +12,53 @@ class Message extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Center(
-          child: Text(
-            Timestamp.fromMillisecondsSinceEpoch(timeStamp).toDate().toString(), 
-            textAlign: TextAlign.end,
-            style: Theme.of(context).textTheme.bodySmall,
+    return Padding(
+      padding: Consts.messageSurroundPadding,
+      child: Column(
+        children: [
+          Center(
+            child: Text(
+              HelperFunctions.timeStampToString(timeStamp), 
+              textAlign: TextAlign.end,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ),
-        ),
-        Container(
-          padding: Consts.messagePadding,
-          color: currentDisplayName == sender
-            ? Consts.sentColor
-            : Consts.receivedColor,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Row(
-                children: [
-                  Text(
-                    sender.toUpperCase(),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  // TODO: use correct timeStamping and get time from timeStamp
-                  
-                ],
-              ),
-
-              const SizedBox(height:3.0),
-
-              Container(
-                decoration: BoxDecoration(
-                  border: Border(left: BorderSide(width: 2.0))
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: currentDisplayName == sender
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      sender,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Consts.senderColor),
+                    ),
+                    const SizedBox(height: 4.0),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(Consts.messageRadius),
+                        color: currentDisplayName == sender
+                        ? Consts.sentColor
+                        : Consts.receivedColor,
+                      ),
+                      constraints: const BoxConstraints(maxWidth: 350),
+                      padding: Consts.messagePadding,
+                      child: Text(
+                        message,
+                        style: currentDisplayName == sender
+                          ? Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white)
+                          : Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
                 ),
-                padding: const EdgeInsets.only(left: 3.0, top: 3.0, bottom: 3.0),
-                child: Text(message)
               ),
             ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

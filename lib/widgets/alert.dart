@@ -12,26 +12,26 @@ class Alert extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: Consts.messagePadding,
-      child: Row(
+      padding: Consts.messageSurroundPadding,
+      child: Column(
         children: [
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                text: sender,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-                children: [
-                  TextSpan(
-                    text: message
-                  )
-                ],
-              )
-            ),
-          ),
           Text(
-            Timestamp.fromMillisecondsSinceEpoch(timeStamp).toDate().toString(), 
+            HelperFunctions.timeStampToString(timeStamp),
             textAlign: TextAlign.end,
             style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 8.0),
+          RichText(
+            text: TextSpan(
+              text: sender,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+              children: [
+                TextSpan(
+                  text: message,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                )
+              ],
+            )
           ),
         ],
       ),
