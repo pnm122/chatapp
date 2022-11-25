@@ -1,4 +1,5 @@
 class Consts {
+  // Firebase stuff
   static String apiKey = "AIzaSyDnNnbM881qDtuufNafKINmWyl2ds27aBE";
   static String projectId ="chatapp-ba297";
   static String messagingSenderId = "315668262849";

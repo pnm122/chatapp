@@ -54,9 +54,9 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Chat App',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 196, 3, 58)),
       ),
       home: _isLoggedIn ? const ChatRoom() : const LoginPage(),
     );
