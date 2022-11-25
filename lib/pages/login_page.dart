@@ -110,7 +110,7 @@ class _SignInFormState extends State<SignInForm> {
                   _formKey.currentState!.save();
 
                   await _auth.signInAnonymously(displayName)
-                    .then((value) async {
+                    .then((value) {
                       if(value != null) {
                         DatabaseService().alertLogIn();
                         pushScreenReplace(context, const ChatRoom());

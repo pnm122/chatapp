@@ -1,3 +1,4 @@
+import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/pages/login_page.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/service/database_service.dart';
@@ -20,6 +21,7 @@ class _ChatRoomState extends State<ChatRoom> {
   // List of messages in the database
   // DatabaseService().getMessages() returns a listener to it so it automatically updates and rebuilds widgets when the messages change
   Stream<QuerySnapshot>? messages;
+  String loggedInDisplayName = "";
 
   @override
     void initState() {
@@ -30,7 +32,16 @@ class _ChatRoomState extends State<ChatRoom> {
           });
         });
 
+      getLoggedInUserName();
       super.initState();
+    }
+
+    void getLoggedInUserName() async {
+      await HelperFunctions.getDisplayName().then((value) {
+        setState(() {
+          loggedInDisplayName = value!;
+        });
+      });
     }
 
   @override
@@ -69,6 +80,7 @@ class _ChatRoomState extends State<ChatRoom> {
                       sender: snapshot.data.docs[index]["sender"],
                       message: snapshot.data.docs[index]["message"],
                       timeStamp: snapshot.data.docs[index]["timeStamp"],
+                      currentDisplayName: loggedInDisplayName,
                     );
                 },
               )
