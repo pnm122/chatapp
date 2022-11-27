@@ -34,15 +34,24 @@ class DatabaseService {
     final displayName = await HelperFunctions.getDisplayName();
     final time = Timestamp.now().millisecondsSinceEpoch;
 
-    messageCollection.doc().set({
-      "isAlert": true,
-      "sender": displayName,
-      "message": " logged out.",
-      "timeStamp": time,
-    });
+    try {
+        messageCollection.doc().set({
+        "isAlert": true,
+        "sender": displayName,
+        "message": " logged out.",
+        "timeStamp": time,
+      });
+    } on FirebaseException catch(e) {
+      print(e);
+    }
+    
   }
 
   getMessages() async {
     return messageCollection.orderBy("timeStamp").snapshots();
+  }
+
+  sendMessage(Map<String, dynamic> messageMap) async {
+    messageCollection.add(messageMap);
   }
 }

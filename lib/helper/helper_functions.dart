@@ -52,8 +52,10 @@ class HelperFunctions {
     // Different format for timestamps > 6 days old, at least a day old, or today
     if(daysOld > 6) {
       return "${daysShort[t.weekday - 1]}, ${months[t.month - 1]} ${t.day}, $hr:$min $ampm";
-    } else if(daysOld > 0) {
+    } else if(daysOld > 1) {
       return "${daysLong[t.weekday - 1]} $hr:$min $ampm";
+    } else if(daysOld == 1) {
+      return "Yesterday $hr:$min $ampm";
     } else {
       return "Today $hr:$min $ampm";
     }

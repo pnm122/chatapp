@@ -9,6 +9,7 @@ class Consts {
 
   static EdgeInsets messagePadding = const EdgeInsets.all(16.0);
   static EdgeInsets messageSurroundPadding = const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0);
+  static EdgeInsets messageSenderPadding = const EdgeInsets.all(16.0);
 
   static const Color sentColor = Color.fromARGB(255, 109, 35, 230);
   static const Color receivedColor = Color.fromARGB(255, 224, 224, 224);
