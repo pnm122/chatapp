@@ -38,7 +38,12 @@ class Message extends StatelessWidget {
                     const SizedBox(height: 4.0),
                     Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(Consts.messageRadius),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Consts.messageRadius,
+                          topRight: Consts.messageRadius,
+                          bottomLeft: currentDisplayName == sender ? Consts.messageRadius : Radius.zero,
+                          bottomRight: currentDisplayName == sender ? Radius.zero : Consts.messageRadius,
+                        ),
                         color: currentDisplayName == sender
                         ? Consts.sentColor
                         : Consts.receivedColor,

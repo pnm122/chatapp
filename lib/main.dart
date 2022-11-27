@@ -57,7 +57,19 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       title: 'Chat App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 196, 3, 58)),
+        colorScheme: const ColorScheme( 
+          primary: Color.fromARGB(255, 0, 0, 0),
+          onPrimary: Colors.white,
+          secondary: Colors.white,
+          onSecondary: Colors.black,
+          error: Colors.red,
+          onError: Colors.white,
+          surface: Color.fromARGB(255, 240, 240, 240),
+          onSurface: Colors.black,
+          background: Colors.white,
+          onBackground: Colors.black,
+          brightness: Brightness.light
+        ),
       ),
       home: _isLoggedIn ? const ChatRoom() : const LoginPage(),
     );
