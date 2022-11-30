@@ -5,6 +5,8 @@ import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/widgets/widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -43,16 +45,12 @@ class SignInForm extends StatefulWidget {
 class _SignInFormState extends State<SignInForm> {
 
   String displayName = "";
-  bool _isLoading = false;
 
   final AuthService _auth = AuthService();
 
-  final _formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
-    return _isLoading 
-    ? const Center(child: CircularProgressIndicator())
-    : Container(
+    return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: Colors.grey.shade200,
@@ -65,80 +63,30 @@ class _SignInFormState extends State<SignInForm> {
         ],
       ),
       
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: <Widget>[
-            Text(
-              "Sign in",
-              style: TextStyle(fontSize: 36, fontWeight: FontWeight.w700),
+      child: Column(
+        children: <Widget>[
+          const Text(
+            "Sign in",
+            style: TextStyle(fontSize: 36, fontWeight: FontWeight.w700),
+          ),
+
+          const SizedBox(height: 32.0),
+
+          ElevatedButton.icon(
+            onPressed: () {
+              final provider = Provider.of<AuthService>(context, listen: false);
+              provider.signInWithGoogle();
+            },
+
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(50),
             ),
 
-            const SizedBox(height: 32.0),
+            icon: const FaIcon(FontAwesomeIcons.google),
+            label: const Text("Sign in with Google"),
 
-            TextFormField(
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.person),
-                border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.circular(5.0),
-                ),
-                filled: true,
-                fillColor: const Color.fromARGB(16, 0, 0, 0),
-                hintText: "Enter a username",
-
-                errorStyle: TextStyle(height: 0.8),
-              ),
-              onSaved: (value){displayName = value!;},
-              
-              validator: (value) {
-                if(value == null || value.isEmpty) {
-                  return "Please enter a username";
-                }
-                return null;
-              }
-            ),
-
-            const SizedBox(height: 16.0),
-
-            // Form submission button
-            ElevatedButton(
-              onPressed: () async {
-                if(_formKey.currentState!.validate()) {
-                  setState(() { _isLoading = true; });
-
-                  _formKey.currentState!.save();
-
-                  await _auth.signInAnonymously(displayName)
-                    .then((value) {
-                      if(value != null) {
-                        DatabaseService().alertLogIn();
-                        pushScreenReplace(context, const ChatRoom());
-                      } else {
-                        setState(() { _isLoading = false; });
-                      }
-                    });
-                  /*showModalBottomSheet(
-                    context: context, 
-                    builder: ((context) => Container(
-                      padding: const EdgeInsets.all(16),
-                      child: result == null 
-                        ? const Text("Sign in unsuccessful")
-                        : const Text("Successfully signed in"),
-                    )),
-                  );*/
-                }
-              },
-
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
-              ),
-
-              child: Text("Start chatting!"),
-
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

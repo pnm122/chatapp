@@ -45,7 +45,7 @@ class _ChatRoomState extends State<ChatRoom> {
         });
       });
 
-    getLoggedInUserName();
+    //getLoggedInUserName();
     super.initState();
   }
 
@@ -57,13 +57,13 @@ class _ChatRoomState extends State<ChatRoom> {
   }
 
 
-  void getLoggedInUserName() async {
+  /*void getLoggedInUserName() async {
     await HelperFunctions.getDisplayName().then((value) {
       setState(() {
         loggedInDisplayName = value!;
       });
     });
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -77,7 +77,7 @@ class _ChatRoomState extends State<ChatRoom> {
             padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
               onPressed: () {
-                DatabaseService().alertLogOut();
+                //DatabaseService().alertLogOut();
                 authService.signOut();
                 pushScreenReplace(context, const LoginPage());
               },

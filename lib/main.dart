@@ -1,9 +1,8 @@
-import 'package:chatapp/helper/helper_functions.dart';
-import 'package:chatapp/pages/login_page.dart';
+import 'package:chatapp/pages/main_wrapper.dart';
+import 'package:chatapp/service/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'pages/chat_room.dart';
+import 'package:provider/provider.dart';
 import 'consts.dart';
 
 void main() async {
@@ -22,24 +21,10 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-
-  var _isLoggedIn = false;
-
-  @override
-  void initState() {
-    super.initState();
-    getUserLoggedInStatus();
-  }
-
-  getUserLoggedInStatus() async {
+  /*getUserLoggedInStatus() async {
     await HelperFunctions.getUserLoggedInStatus().then((value) {
       if(value != null) {
         setState(() {
@@ -47,31 +32,31 @@ class _MyAppState extends State<MyApp> {
         });
       }
     });
-    
-  }
-
-  // This widget is the root of your application.
+  }*/
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Chat App',
-      theme: ThemeData(
-        colorScheme: const ColorScheme( 
-          primary: Color.fromARGB(255, 0, 0, 0),
-          onPrimary: Colors.white,
-          secondary: Colors.white,
-          onSecondary: Colors.black,
-          error: Colors.red,
-          onError: Colors.white,
-          surface: Color.fromARGB(255, 240, 240, 240),
-          onSurface: Colors.black,
-          background: Colors.white,
-          onBackground: Colors.black,
-          brightness: Brightness.light
+    return ChangeNotifierProvider(
+      create: (context) => AuthService(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Chat App',
+        theme: ThemeData(
+          colorScheme: const ColorScheme( 
+            primary: Color.fromARGB(255, 0, 0, 0),
+            onPrimary: Colors.white,
+            secondary: Colors.white,
+            onSecondary: Colors.black,
+            error: Colors.red,
+            onError: Colors.white,
+            surface: Color.fromARGB(255, 240, 240, 240),
+            onSurface: Colors.black,
+            background: Colors.white,
+            onBackground: Colors.black,
+            brightness: Brightness.light
+          ),
         ),
+        home: const MainWrapper(),
       ),
-      home: _isLoggedIn ? const ChatRoom() : const LoginPage(),
     );
   }
 }
