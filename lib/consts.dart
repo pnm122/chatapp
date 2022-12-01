@@ -16,5 +16,8 @@ class Consts {
   static const Color senderColor = Color.fromARGB(255, 99, 99, 99);
   static const Radius messageRadius = Radius.circular(18);
 
+  static const Color inputBackgroundColor = Color.fromARGB(20, 0, 0, 0);
+  static const EdgeInsets inputPadding = EdgeInsets.symmetric(vertical:8.0, horizontal: 12.0);
+
   static const double showScrollButtonHeight = 300.0;
 }
