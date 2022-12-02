@@ -17,7 +17,7 @@ class MainWrapper extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           } else if(snapshot.hasData) {
             return const ChatRoom();
-          } else if(snapshot.hasData) {
+          } else if(snapshot.hasError) {
             return const Center(child: Text("Something went wrong!"));
           } else {
             return const LoginPage();

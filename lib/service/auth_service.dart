@@ -8,19 +8,45 @@ class AuthService with ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   //_firebaseAuth.currentUser.updateDisplayName(displayName)
 
-  GoogleSignInAccount? _user;
+  UserCredential? _user;
 
-  GoogleSignInAccount get user => _user!;
+  UserCredential get user => _user!;
+
+  Future createAccountWithEmailAndPass(String email, String pass) async {
+    try {
+      await _firebaseAuth.createUserWithEmailAndPassword(
+        email: email, 
+        password: pass
+      ).then((credential) {
+        _user = credential;
+        return null;
+      },);
+    } on FirebaseAuthException catch(e) {
+      return e.code;
+    }
+  }
+
+  Future signInWithEmailAndPass(String email, String pass) async {
+    try {
+      await _firebaseAuth.signInWithEmailAndPassword(
+        email: email, 
+        password: pass
+      ).then((credential) {
+        _user = credential;
+        return null;
+      },);
+    } on FirebaseAuthException catch(e) {
+      return e.code;
+    }
+  }
 
   Future signInWithGoogle() async {
     final account = await GoogleSignIn().signIn();
     if(account == null) return null;
 
-    _user = account;
-
     final auth = await account.authentication;
     try {
-      final user = await _firebaseAuth.signInWithCredential(
+      _user = await _firebaseAuth.signInWithCredential(
         GoogleAuthProvider.credential(
           idToken: auth.idToken,
           accessToken: auth.accessToken
@@ -28,7 +54,7 @@ class AuthService with ChangeNotifier {
       );
 
       print("${user.additionalUserInfo?.username} : ${user.additionalUserInfo?.isNewUser}");
-      return user;
+      return _user;
     } on FirebaseAuthException catch(e) {
       //print(e.message);
       return null;

@@ -1,6 +1,8 @@
 class Todo {
   // 2.0.0:
-  //   TODO: Google authentication
+  //   DONE: Google authentication
+  //   DONE: Register page
+  //   DONE: Sign in with email and password
   //   TODO: Create groups with password
   //   TODO: Show the list of groups you're in and be able to select between them
   //   TODO: Pass in snapshot data to chatroom from wrapper
