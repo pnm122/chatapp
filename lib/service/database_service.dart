@@ -12,6 +12,12 @@ class DatabaseService {
   final CollectionReference messageCollection = 
     FirebaseFirestore.instance.collection("messages");
 
+  Future test() async {
+    return await userCollection.doc().set({
+      "test": "test",
+    });
+  }
+
   Future updateUserData(String displayName) async {
     return await userCollection.doc(uid).set({
       "displayName": displayName,
@@ -48,7 +54,9 @@ class DatabaseService {
   }
 
   getMessages() async {
-    return messageCollection.orderBy("timeStamp").snapshots();
+    // Descending = true to reverse the order, so that newest messages are at the start of the list
+    // This is important so that we can render the newest messages first on the chat page
+    return messageCollection.orderBy("timeStamp", descending: true).snapshots();
   }
 
   sendMessage(Map<String, dynamic> messageMap) async {

@@ -1,9 +1,11 @@
 import 'package:chatapp/pages/main_wrapper.dart';
 import 'package:chatapp/service/auth_service.dart';
+import 'package:chatapp/service/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'consts.dart';
+import 'dart:html' as html;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +20,13 @@ void main() async {
       projectId: Consts.projectId
     ),
   );
+
+  // ANY DATABASE FUNCTIONS REQUIRE US TO BE SIGNED IN FIRST...
+  /*html.window.onUnload.listen((event) async {
+    print("Unload...");
+    await DatabaseService().test();
+  },);*/
+
   runApp(const MyApp());
 }
 

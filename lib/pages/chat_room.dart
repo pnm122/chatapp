@@ -68,24 +68,7 @@ class _ChatRoomState extends State<ChatRoom> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        shadowColor: Colors.transparent,
-        foregroundColor: Theme.of(context).colorScheme.primary,
-        actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                //DatabaseService().alertLogOut();
-                authService.signOut();
-                pushScreenReplace(context, const LoginPage());
-              },
-              child: const Text("Log out"),
-            ),
-          ),
-        ]
-      ),
+      
       body: Column(
         children: [
           Expanded(
@@ -111,7 +94,7 @@ class _ChatRoomState extends State<ChatRoom> {
 
   scrollButtonAndNotifier() {
     return InkWell(
-      onTap: () => scrollToBottom(true),
+      onTap: () => scrollToBottom(),
       child: Badge(
         key: ValueKey<int>(notifs),
         position: BadgePosition.topEnd(),
@@ -205,14 +188,14 @@ class _ChatRoomState extends State<ChatRoom> {
             return; 
           }
           if(_scrollController.hasClients) {
-            scrollToBottom(false);
+            scrollToBottom();
           }
         });
 
         return snapshot.hasData
         ? NotificationListener<ScrollNotification>(
           onNotification: (scroll) {
-            double dist = _scrollController.position.maxScrollExtent - scroll.metrics.pixels;
+            double dist = scroll.metrics.pixels;
             if(dist > Consts.showScrollButtonHeight && showScrollButton == false) {
               setState(() {showScrollButton = true; notifs = 0; messagesWhenButtonShown = snapshot.data.docs.length; });
             } else if(dist < Consts.showScrollButtonHeight && showScrollButton == true) {
@@ -221,6 +204,8 @@ class _ChatRoomState extends State<ChatRoom> {
             return false;
           },
           child: ListView.builder(
+              reverse: true, // IMPORTANT: List is in reverse order, meaning newest messages are at the start of the list, so these messages display at the bottom
+                             // this is an important optimization so we aren't loading every message when the page is loaded
               controller: _scrollController,
               scrollDirection: Axis.vertical,
               shrinkWrap: true,
@@ -246,18 +231,12 @@ class _ChatRoomState extends State<ChatRoom> {
     );
   }
 
-  scrollToBottom(bool animate) {
-    if(animate) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    } else {
-      _scrollController.jumpTo(
-        _scrollController.position.maxScrollExtent,
-      );
-    }
+  scrollToBottom() {
+    _scrollController.animateTo(
+      _scrollController.position.minScrollExtent, // minScrollExtent because list builds from bottom to top
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   sendMessage() {
