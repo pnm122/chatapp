@@ -20,7 +20,6 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   var isLoginForm = true;
-  final AuthService _auth = AuthService();
 
   final _formKey = GlobalKey<FormState>();
 
@@ -147,15 +146,22 @@ class _LoginPageState extends State<LoginPage> {
                           onPressed: () async {
                             _formKey.currentState!.save();
                             if(_formKey.currentState!.validate()) {
+                              // Use the same authservice provider for all authentication purposes!
+                              var provider = Provider.of<AuthService>(context, listen: false);
                               var error;
 
-                              isLoginForm ? await _auth.signInWithEmailAndPass(userEmail, userPass).then((result) {
+                              isLoginForm ? await provider.signInWithEmailAndPass(userEmail, userPass).then((result) {
                                 error = result;
-                              }) : await _auth.createAccountWithEmailAndPass(userEmail, userPass).then((result) {
+                              }) : await provider.createAccountWithEmailAndPass(userEmail, userPass).then((result) {
                                 error = result;
                               });
 
-                              if(error != null) {
+                              // No error => add user to the database
+                              // Error => display error
+                              if(error == null) {
+                                DatabaseService().createUser(provider.user);
+                                HelperFunctions.saveUserID(provider.user.user!.uid);
+                              } else {
                                 showModalBottomSheet(
                                   context: context, 
                                   builder: ((context) {

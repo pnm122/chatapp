@@ -7,10 +7,9 @@ class Todo {
   //   TODO: Show the list of groups you're in and be able to select between them
   //   TODO: Pass in snapshot data to chatroom from wrapper
   //   TODO: Fix authstatechanges not updating for some reason after signing out
-  //   TODO: Messages load in reverse order upwards so that you load recent messages first
   //   TODO: Notification bubble on groups icon when a group has new messages?
   //   TODO: Find a way to constrain the size of groups on small screen size
-  //   TODO: Fix apparent scroll jump when a new message is sent
+  //   TODO: Force user to create a username when they sign in for the first time
 
   // TODO: Don't allow users to sign in as another past user (username and password?)
   // TODO: Dark mode switiching support

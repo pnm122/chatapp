@@ -1,6 +1,7 @@
 import 'package:chatapp/helper/helper_functions.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chatapp/consts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class DatabaseService {
   final String? uid;
@@ -12,16 +13,37 @@ class DatabaseService {
   final CollectionReference messageCollection = 
     FirebaseFirestore.instance.collection("messages");
 
-  Future test() async {
-    return await userCollection.doc().set({
-      "test": "test",
+  final CollectionReference groupCollection =
+    FirebaseFirestore.instance.collection("groups");
+
+  Future createUser(UserCredential user) async {
+    await userCollection.doc(user.user?.uid).set({
+      "displayName": "",
+      "isLoggedIn": true,
+    });
+    // Other data:
+    // groups (collection)
+  }
+
+  Stream<DocumentSnapshot> getGroup(String id) {
+    return groupCollection.doc(id).snapshots();
+  }
+
+  Future createGroup(String groupName) async {
+    DocumentReference group = groupCollection.doc();
+    await group.set({
+      "name": groupName,
+    });
+
+    String? uid = await HelperFunctions.getUserID();
+    await userCollection.doc(uid).collection("groups").doc().set({
+      "id": group.id,
     });
   }
 
-  Future updateUserData(String displayName) async {
-    return await userCollection.doc(uid).set({
-      "displayName": displayName,
-    });
+  Future getCurrentUserGroups() async {
+    String? uid = await HelperFunctions.getUserID();
+    return userCollection.doc(uid).collection("groups").snapshots();
   }
 
   alertLogIn() async {
@@ -53,10 +75,8 @@ class DatabaseService {
     
   }
 
-  getMessages() async {
-    // Descending = true to reverse the order, so that newest messages are at the start of the list
-    // This is important so that we can render the newest messages first on the chat page
-    return messageCollection.orderBy("timeStamp", descending: true).snapshots();
+  getMessages() {
+    return messageCollection.orderBy("timeStamp").snapshots();
   }
 
   sendMessage(Map<String, dynamic> messageMap) async {

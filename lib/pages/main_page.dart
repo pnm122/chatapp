@@ -53,7 +53,7 @@ class MainPage extends StatelessWidget {
                 ),
               actions: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: Consts.sideMargin),
                   child: ElevatedButton(
                     onPressed: () {
                       //DatabaseService().alertLogOut();

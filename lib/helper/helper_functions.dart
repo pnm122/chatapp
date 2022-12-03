@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:chatapp/consts.dart';
 
 class HelperFunctions {
-  static String userLoggedInKey = "LOGGEDINKEY";
+  static String userIDKey = "USERIDKEY";
   static String displayNameKey = "USERNAMEKEY";
 
   static final List<String> months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -13,21 +13,20 @@ class HelperFunctions {
   
   // Shared Preferences is like a set of things we can save when the user closes out of the app
 
-  static Future<bool> saveUserLoggedInStatus(bool isUserLoggedIn) async {
+  static Future<bool> saveUserID(String id) async {
     SharedPreferences sf = await SharedPreferences.getInstance();
-    return await sf.setBool(userLoggedInKey, isUserLoggedIn);
+    return await sf.setString(userIDKey, id);
   }
+  static Future<String?> getUserID() async {
+    SharedPreferences sf = await SharedPreferences.getInstance();
+    return sf.getString(userIDKey);
+  }
+  
 
   static Future<bool> saveDisplayName(String displayName) async {
     SharedPreferences sf = await SharedPreferences.getInstance();
     return await sf.setString(displayNameKey, displayName);
   }
-
-  static Future<bool?> getUserLoggedInStatus() async {
-    SharedPreferences sf = await SharedPreferences.getInstance();
-    return sf.getBool(userLoggedInKey);
-  }
-
   static Future<String?> getDisplayName() async {
     SharedPreferences sf = await SharedPreferences.getInstance();
     return sf.getString(displayNameKey);
@@ -42,7 +41,9 @@ class HelperFunctions {
       ? "0${t.minute}"
       : t.minute.toString();
     String ampm = t.hour > 11 ? "PM" : "AM";
-    int daysOld = DateTime.now().difference(t).inDays;
+    DateTime now = DateTime.now();
+    int daysOld = DateTime(now.year, now.month, now.day)
+      .difference(DateTime(t.year, t.month, t.day)).inDays;
 
     // Add the year in if the message is from another year for clarity
     if(DateTime.now().year != t.year) {
@@ -59,6 +60,19 @@ class HelperFunctions {
     } else {
       return "Today $hr:$min $ampm";
     }
+  }
 
+  static String abbreviate(String full) {
+    List<String> split = full.split(' ');
+    String a = "";
+    for(int i = 0; i < split.length; i++) {
+      String s = split[i];
+      if(i == 2) { break; }
+      if(s != "") { a += s[0].toUpperCase(); }
+    }
+
+    if(a == "") { a = "G"; }
+
+    return a;
   }
 }
