@@ -1,6 +1,7 @@
 import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/service/database_service.dart';
+import 'package:chatapp/viewmodels/main_view_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chatapp/consts.dart';
@@ -15,16 +16,17 @@ class Groups extends StatefulWidget {
 }
 
 class _GroupsState extends State<Groups> {
-  Stream<QuerySnapshot>? groups;
+  List<Stream> groups = List.empty(growable: true);
 
   @override
   void initState() {
-    super.initState();
-    DatabaseService().getCurrentUserGroups().then((groups) {
-      setState(() {
-        this.groups = groups;
-      });
+    Stream<DocumentSnapshot> userInfo = DatabaseService().getCurrentUserInfo();
+    userInfo.forEach((element) { 
+      List groupIDs = ((element.data() as Map<String, dynamic>)["groups"]);
+      for(var groupID in groupIDs) { groups.add(DatabaseService().getGroup(groupID)); }
+      setState(() {});
     });
+    super.initState();
   }
 
   @override
@@ -37,58 +39,119 @@ class _GroupsState extends State<Groups> {
           title: Text("Your Groups"),
         ),
         body: Container(
-          padding: Consts.groupSectionPadding,
           color: Colors.white,
-          child: StreamBuilder(
-              stream: groups,
-              builder:(context, AsyncSnapshot snapshot) {
-                if(snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if(snapshot.hasData && snapshot.data.docs.length > 0) {
-                  // make first item an add group button
-                  return Column(
-                    children: [
-                      CreateGroupButton(),
-                      ListView.builder(
-                        itemCount: snapshot.data.docs.length,
-                        shrinkWrap: true,
-                        itemBuilder: (context, index) {
-                          String id = snapshot.data.docs[index]["id"];
-                          Stream<DocumentSnapshot> g = DatabaseService().getGroup(id);
-                          return StreamBuilder(
-                            stream: g,
-                            builder: ((context, AsyncSnapshot snapshot) {
-                              if(snapshot.hasData) {
-                                return Text(snapshot.data["name"]);
-                              } else {
-                                return Container();
-                              }
-                            })
-                          );
+          // Outer StreamBuilder: list of all group ID's associated with this user
+          // Get the group with this ID from the database
+          // Use another StreamBuilder to pull the actual info from this group
+          child: groups.isEmpty
+            ? const Center(child: CreateGroupButton())
+            : Column(
+                children: [
+                  CreateGroupButton(),
+                  ListView.builder(
+                    itemCount: groups.length,
+                    shrinkWrap: true,
+                    itemBuilder: (context, index) {
+                      return StreamBuilder(
+                        stream: groups[index],
+                        builder:(context, AsyncSnapshot snapshot) {
+                          if(snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                          if(snapshot.hasData) {
+                            return GroupTile(info: snapshot.data!.data(), index: index);
+                          } else { 
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Text("You haven't joined any groups yet."),
+                                SizedBox(height: 5.0),
+                                CreateGroupButton()
+                              ]
+                            );
+                          }
                         },
-                      )
-                    ]
-                  );
-                } else { 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text("You haven't joined any groups yet."),
-                      SizedBox(height: 5.0),
-                      CreateGroupButton()
-                    ]
-                  );
-                }
-              },
-            ),
+                      );
+                    },
+                    
+                  ),
+                ],
+              ),
         )
       ),
     );
   }
 }
+
+class GroupTile extends StatefulWidget {
+  const GroupTile({super.key, required this.info, required this.index});
+  final Map<String, dynamic> info;
+  final int index;
+
+  @override
+  State<GroupTile> createState() => _GroupTileState();
+}
+
+class _GroupTileState extends State<GroupTile> {
+  @override
+  Widget build(BuildContext context) {
+    int selectedIndex = context.watch<MainViewModel>().selectedIndex;
+    return InkWell(
+      onTap: () {
+        context.read<MainViewModel>().setSelectedIndex(widget.index);
+        context.read<MainViewModel>().setSelectedGroupId(widget.info["id"]);
+      },
+      child: Container(
+        padding: Consts.groupTilePadding,
+        color: widget.index == selectedIndex
+          ? const Color.fromARGB(255, 245, 226, 208)
+          : Colors.white,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              backgroundColor: widget.index == selectedIndex ? Theme.of(context).colorScheme.primary : Colors.grey.shade500,
+              foregroundColor: widget.index == selectedIndex ? Colors.white : Colors.black, // Not working?
+              radius: 24,
+              child: Text(HelperFunctions.abbreviate(widget.info["name"]), style: Theme.of(context).textTheme.headline6)
+            ),
+
+            const SizedBox(width: 8.0),
+
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Title of the group
+                Text(
+                  widget.info["name"],
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+                ),
+
+                const SizedBox(height: 5.0),
+
+                // Last message sent
+                widget.info["lastMessage"] == ""
+                  ? Text(
+                      "No messages yet.",
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey, fontStyle: FontStyle.italic),
+                    )
+                  : Text(
+                      widget.info["lastMessage"],
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                    )
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
 
 class CreateGroupButton extends StatefulWidget {
   const CreateGroupButton({super.key});
@@ -127,7 +190,7 @@ class _CreateGroupButtonState extends State<CreateGroupButton> {
             )
           ),
           Icon(
-            hover ? Icons.add_circle : Icons.add_circle_outline,
+            hover ? Icons.add_circle : Icons.add,
             size: 20.0,
             color: Theme.of(context).colorScheme.primary
           )

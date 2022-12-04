@@ -14,7 +14,7 @@ class Consts {
   static EdgeInsets messageSenderPadding = const EdgeInsets.all(16.0);
   static EdgeInsets innerSenderPadding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0);
 
-  static EdgeInsets groupSectionPadding = const EdgeInsets.all(16.0);
+  static EdgeInsets groupTilePadding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
 
   static const Color sentColor = Color.fromARGB(255, 203, 67, 33);
   static const Color receivedColor = Color.fromARGB(255, 224, 224, 224);

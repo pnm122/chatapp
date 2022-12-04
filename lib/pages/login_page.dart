@@ -148,18 +148,21 @@ class _LoginPageState extends State<LoginPage> {
                             if(_formKey.currentState!.validate()) {
                               // Use the same authservice provider for all authentication purposes!
                               var provider = Provider.of<AuthService>(context, listen: false);
+                              bool creating = false;
                               var error;
 
                               isLoginForm ? await provider.signInWithEmailAndPass(userEmail, userPass).then((result) {
                                 error = result;
                               }) : await provider.createAccountWithEmailAndPass(userEmail, userPass).then((result) {
                                 error = result;
+                                creating = true;
                               });
 
                               // No error => add user to the database
                               // Error => display error
                               if(error == null) {
-                                DatabaseService().createUser(provider.user);
+                                if(creating) { DatabaseService().createUser(provider.user); } 
+                                else { DatabaseService().signIn(); }
                                 HelperFunctions.saveUserID(provider.user.user!.uid);
                               } else {
                                 showModalBottomSheet(

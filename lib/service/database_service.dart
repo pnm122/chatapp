@@ -20,30 +20,37 @@ class DatabaseService {
     await userCollection.doc(user.user?.uid).set({
       "displayName": "",
       "isLoggedIn": true,
+      "groups": [],
     });
-    // Other data:
-    // groups (collection)
-  }
-
-  Stream<DocumentSnapshot> getGroup(String id) {
-    return groupCollection.doc(id).snapshots();
   }
 
   Future createGroup(String groupName) async {
-    DocumentReference group = groupCollection.doc();
-    await group.set({
+    DocumentReference group = await groupCollection.add({
       "name": groupName,
+      "createdTime": DateTime.now().millisecondsSinceEpoch,
+      "lastMessage": "",
+      "lastMessageTimeStamp": -1,
+      "members": [FirebaseAuth.instance.currentUser!.uid],
+      // Also will have a collection of messages
     });
 
-    String? uid = await HelperFunctions.getUserID();
-    await userCollection.doc(uid).collection("groups").doc().set({
-      "id": group.id,
+    // Store the ID in the group as well so it's easier to pull out later
+    await group.update({"id": group.id});
+
+    String? uid = FirebaseAuth.instance.currentUser!.uid;
+    await userCollection.doc(uid).update({
+      "groups": FieldValue.arrayUnion([group.id])
     });
   }
 
-  Future getCurrentUserGroups() async {
-    String? uid = await HelperFunctions.getUserID();
-    return userCollection.doc(uid).collection("groups").snapshots();
+  Stream<DocumentSnapshot> getCurrentUserInfo() {
+    // Use instead of HelperFunctions method to get current user ID?
+    String? uid = FirebaseAuth.instance.currentUser!.uid;
+    return userCollection.doc(uid).snapshots();
+  }
+
+  Stream<DocumentSnapshot> getGroup(String groupId) {
+    return groupCollection.doc(groupId).snapshots();
   }
 
   alertLogIn() async {
@@ -58,28 +65,24 @@ class DatabaseService {
     });
   }
 
-  alertLogOut() async {
-    final displayName = await HelperFunctions.getDisplayName();
-    final time = Timestamp.now().millisecondsSinceEpoch;
-
-    try {
-        messageCollection.doc().set({
-        "isAlert": true,
-        "sender": displayName,
-        "message": " logged out.",
-        "timeStamp": time,
-      });
-    } on FirebaseException catch(e) {
-      print(e);
-    }
-    
+  signIn() async {
+    await userCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
+      "loggedIn": true,
+    });
   }
 
-  getMessages() {
-    return messageCollection.orderBy("timeStamp").snapshots();
+  signOut() async {
+    await userCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
+      "loggedIn": false,
+    });
   }
 
-  sendMessage(Map<String, dynamic> messageMap) async {
-    messageCollection.add(messageMap);
+  getMessages(String groupID) {
+    if(groupID.isEmpty) return null;
+    return groupCollection.doc(groupID).collection("messages").orderBy("timeStamp").snapshots();
+  }
+
+  sendMessage(String groupID, Map<String, dynamic> messageMap) async {
+    groupCollection.doc(groupID).collection("messages").add(messageMap);
   }
 }

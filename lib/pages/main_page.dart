@@ -1,7 +1,9 @@
 import 'package:chatapp/consts.dart';
 import 'package:chatapp/pages/chat_room.dart';
+import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/widgets/groups.dart';
 import 'package:chatapp/widgets/custom_app_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:chatapp/service/auth_service.dart';
@@ -9,18 +11,17 @@ import 'package:chatapp/widgets/widgets.dart';
 import 'package:chatapp/pages/login_page.dart';
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class MainPage extends StatelessWidget {
   MainPage({super.key});
-
-  final _auth = AuthService();
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
         MediaQuery.of(context).size.width > Consts.cutoffWidth
-          ? const Groups()
+          ? Groups()
           : Container(),
 
         // Use expanded so it doesn't overflow (bc the other row element is a sizedbox)
@@ -56,8 +57,8 @@ class MainPage extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: Consts.sideMargin),
                   child: ElevatedButton(
                     onPressed: () {
-                      //DatabaseService().alertLogOut();
-                      _auth.signOut();
+                      DatabaseService().signOut();
+                      Provider.of<AuthService>(context, listen: false).signOut();
                       pushScreenReplace(context, const LoginPage());
                     },
                     child: const Text("Log out"),

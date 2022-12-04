@@ -7,6 +7,7 @@ import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/pages/login_page.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/service/database_service.dart';
+import 'package:chatapp/viewmodels/main_view_model.dart';
 import 'package:chatapp/widgets/alert.dart';
 import 'package:chatapp/widgets/message.dart';
 import 'package:chatapp/widgets/widgets.dart';
@@ -14,6 +15,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:provider/provider.dart';
 
 class ChatRoom extends StatefulWidget {
   const ChatRoom({super.key});
@@ -26,7 +28,8 @@ class _ChatRoomState extends State<ChatRoom> {
   AuthService authService = AuthService();
   // List of messages in the database
   // DatabaseService().getMessages() returns a listener to it so it automatically updates and rebuilds widgets when the messages change
-  Stream<QuerySnapshot>? messages;
+  Stream<QuerySnapshot<Object?>>? messages;
+  String groupID = "";
   String loggedInDisplayName = "";
 
   final TextEditingController _messageController = TextEditingController();
@@ -38,53 +41,39 @@ class _ChatRoomState extends State<ChatRoom> {
   int messagesWhenButtonShown = 0;
 
   @override
-  void initState() {
-    setState(() {
-      messages = DatabaseService().getMessages();
-    });
-
-    //getLoggedInUserName();
-    super.initState();
-  }
-
-  @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-
-  /*void getLoggedInUserName() async {
-    await HelperFunctions.getDisplayName().then((value) {
-      setState(() {
-        loggedInDisplayName = value!;
-      });
-    });
-  }*/
-
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: Stack(
-            children: [
-              chatMessages(),
-              Container(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                alignment: Alignment.bottomCenter,
-                key: ValueKey<bool>(showScrollButton), // updates when showScrollButton is changed!
-                child: showScrollButton
-                  ? scrollButtonAndNotifier()
-                  : const SizedBox(height: 0, width: 0),
+    groupID = context.watch<MainViewModel>().selectedGroupId;
+    messages = context.watch<MainViewModel>().messages as Stream<QuerySnapshot<Object?>>?;
+
+    return groupID == "" 
+      ? Center(child: Text("Please select a group"))
+      : Column(
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  chatMessages(),
+                  Container(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    alignment: Alignment.bottomCenter,
+                    key: ValueKey<bool>(showScrollButton), // updates when showScrollButton is changed!
+                    child: showScrollButton
+                      ? scrollButtonAndNotifier()
+                      : const SizedBox(height: 0, width: 0),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-        messageSender(),
-      ],
-    );
+            ),
+            messageSender(),
+          ],
+        );
   }
 
   scrollButtonAndNotifier() {
@@ -247,11 +236,11 @@ class _ChatRoomState extends State<ChatRoom> {
       Map<String, dynamic> messageMap = {
         "isAlert": false,
         "message": _messageController.text,
-        "sender": loggedInDisplayName,
+        "sender": "TODO: UPDATE USERNAME",
         "timeStamp": Timestamp.now().millisecondsSinceEpoch
       };
 
-      DatabaseService().sendMessage(messageMap).then((_) {
+      DatabaseService().sendMessage(groupID, messageMap).then((_) {
         setState(() {
           _messageController.clear();
         });
