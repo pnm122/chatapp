@@ -10,7 +10,7 @@ class AuthService with ChangeNotifier {
 
   UserCredential? _user;
 
-  UserCredential get user => _user!;
+  UserCredential? get user => _user;
 
   Future createAccountWithEmailAndPass(String email, String pass) async {
     try {
@@ -46,25 +46,25 @@ class AuthService with ChangeNotifier {
 
     final auth = await account.authentication;
     try {
-      _user = await _firebaseAuth.signInWithCredential(
+      await _firebaseAuth.signInWithCredential(
         GoogleAuthProvider.credential(
           idToken: auth.idToken,
           accessToken: auth.accessToken
         )
-      );
-
-      print("${user.additionalUserInfo?.username} : ${user.additionalUserInfo?.isNewUser}");
-      return _user;
+      ).then((credential) {
+        _user = credential;
+      });
+      return null;
     } on FirebaseAuthException catch(e) {
       //print(e.message);
-      return null;
+      return e.code;
     }
   }
 
   Future signOut() async {
     try {
-      await FirebaseAuth.instance.signOut();
       await GoogleSignIn().signOut();
+      await FirebaseAuth.instance.signOut();
     } catch(e) {
       return null;
     }

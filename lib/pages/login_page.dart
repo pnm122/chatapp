@@ -161,24 +161,11 @@ class _LoginPageState extends State<LoginPage> {
                               // No error => add user to the database
                               // Error => display error
                               if(error == null) {
-                                if(creating) { DatabaseService().createUser(provider.user); } 
+                                if(creating) { DatabaseService().createUser(provider.user!); } 
                                 else { DatabaseService().signIn(); }
-                                HelperFunctions.saveUserID(provider.user.user!.uid);
+                                HelperFunctions.saveUserID(provider.user!.user!.uid);
                               } else {
-                                showModalBottomSheet(
-                                  context: context, 
-                                  builder: ((context) {
-                                    return Container(
-                                      padding: const EdgeInsets.all(12.0),
-                                      color: Theme.of(context).colorScheme.error,
-                                      child: Text(
-                                        error, 
-                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onError),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    );
-                                  }),
-                                );
+                                showError(error);
                               }
                             }
                           },
@@ -203,9 +190,18 @@ class _LoginPageState extends State<LoginPage> {
 
                   // Google sign in button
                   ElevatedButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
                       final provider = Provider.of<AuthService>(context, listen: false);
-                      provider.signInWithGoogle();
+                      await provider.signInWithGoogle().then((error) {
+                        if(error == null) {
+                          print(provider.user!.additionalUserInfo!.isNewUser);
+                          if(provider.user!.additionalUserInfo!.isNewUser) { DatabaseService().createUser(provider.user!); } 
+                          else { DatabaseService().signIn(); }
+                          HelperFunctions.saveUserID(provider.user!.user!.uid);
+                        } else {
+                          showError(error.toString());
+                        }
+                      });
                     },
 
                     style: ElevatedButton.styleFrom(
@@ -223,6 +219,23 @@ class _LoginPageState extends State<LoginPage> {
           ],
         ),
       )
+    );
+  }
+
+  showError(String error) {
+    showModalBottomSheet(
+      context: context, 
+      builder: ((context) {
+        return Container(
+          padding: const EdgeInsets.all(12.0),
+          color: Theme.of(context).colorScheme.error,
+          child: Text(
+            error, 
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onError),
+            textAlign: TextAlign.center,
+          ),
+        );
+      }),
     );
   }
 }

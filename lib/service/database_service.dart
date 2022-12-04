@@ -43,37 +43,57 @@ class DatabaseService {
     });
   }
 
+  Future joinGroup(String groupID) async {
+    String id = FirebaseAuth.instance.currentUser!.uid;
+    try {
+      DocumentReference group = groupCollection.doc(groupID);
+      
+      /*if(await group.get().then((value) => (value.data() as Map<String, dynamic>)["members"].contains(id))) {
+
+      }*/
+      await group.update({
+        "members": FieldValue.arrayUnion([id])
+      });
+      await userCollection.doc(id).update({
+        "groups": FieldValue.arrayUnion([groupID])
+      });
+
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Stream<DocumentSnapshot> getCurrentUserInfo() {
     // Use instead of HelperFunctions method to get current user ID?
     String? uid = FirebaseAuth.instance.currentUser!.uid;
     return userCollection.doc(uid).snapshots();
   }
 
+  Future<String> getCurrentUserName() async {
+    String? uid = FirebaseAuth.instance.currentUser!.uid;
+    return await userCollection.doc(uid).get().then((value) => (value.data() as Map<String, dynamic>)["displayName"]);
+  }
+
   Stream<DocumentSnapshot> getGroup(String groupId) {
     return groupCollection.doc(groupId).snapshots();
   }
 
-  alertLogIn() async {
-    final displayName = await HelperFunctions.getDisplayName();
-    final time = Timestamp.now().millisecondsSinceEpoch;
-
-    messageCollection.doc().set({
-      "isAlert": true,
-      "sender": displayName,
-      "message": " logged in.",
-      "timeStamp": time,
+  Future setDisplayName(String displayName) async {
+    await userCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
+      "displayName": displayName,
     });
   }
 
   signIn() async {
     await userCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
-      "loggedIn": true,
+      "isLoggedIn": true,
     });
   }
 
   signOut() async {
     await userCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
-      "loggedIn": false,
+      "isLoggedIn": false,
     });
   }
 

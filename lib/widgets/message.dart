@@ -4,8 +4,9 @@ import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/consts.dart';
 
 class Message extends StatelessWidget {
-  const Message({super.key, required this.sender, required this.message, required this.timeStamp, required this.currentDisplayName});
+  const Message({super.key, required this.sender, required this.sentByMe, required this.message, required this.timeStamp, required this.currentDisplayName});
   final String sender;
+  final bool sentByMe;
   final String message;
   final int timeStamp;
   final String currentDisplayName;
@@ -27,7 +28,7 @@ class Message extends StatelessWidget {
             children: [
               Expanded(
                 child: Column(
-                  crossAxisAlignment: currentDisplayName == sender
+                  crossAxisAlignment: sentByMe
                     ? CrossAxisAlignment.end
                     : CrossAxisAlignment.start,
                   children: [
@@ -41,10 +42,10 @@ class Message extends StatelessWidget {
                         borderRadius: BorderRadius.only(
                           topLeft: Consts.messageRadius,
                           topRight: Consts.messageRadius,
-                          bottomLeft: currentDisplayName == sender ? Consts.messageRadius : Radius.zero,
-                          bottomRight: currentDisplayName == sender ? Radius.zero : Consts.messageRadius,
+                          bottomLeft: sentByMe ? Consts.messageRadius : Radius.zero,
+                          bottomRight: sentByMe ? Radius.zero : Consts.messageRadius,
                         ),
-                        color: currentDisplayName == sender
+                        color: sentByMe
                         ? Consts.sentColor
                         : Consts.receivedColor,
                       ),
@@ -52,7 +53,7 @@ class Message extends StatelessWidget {
                       padding: Consts.messagePadding,
                       child: Text(
                         message,
-                        style: currentDisplayName == sender
+                        style: sentByMe
                           ? Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white)
                           : Theme.of(context).textTheme.bodyMedium,
                       ),

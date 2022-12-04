@@ -22,7 +22,7 @@ void main() async {
     ),
   );
 
-  FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
+  FirebaseAuth.instance.setPersistence(Persistence.NONE);
 
   // ANY DATABASE FUNCTIONS REQUIRE US TO BE SIGNED IN FIRST...
   /*html.window.onUnload.listen((event) async {

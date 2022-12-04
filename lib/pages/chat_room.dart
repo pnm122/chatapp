@@ -12,6 +12,7 @@ import 'package:chatapp/widgets/alert.dart';
 import 'package:chatapp/widgets/message.dart';
 import 'package:chatapp/widgets/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -205,6 +206,7 @@ class _ChatRoomState extends State<ChatRoom> {
                   ) 
                   : Message(
                     sender: snapshot.data.docs[index]["sender"],
+                    sentByMe: snapshot.data.docs[index]["senderID"] == FirebaseAuth.instance.currentUser!.uid,
                     message: snapshot.data.docs[index]["message"],
                     timeStamp: snapshot.data.docs[index]["timeStamp"],
                     currentDisplayName: loggedInDisplayName,
@@ -231,12 +233,13 @@ class _ChatRoomState extends State<ChatRoom> {
     );
   }
 
-  sendMessage() {
+  sendMessage() async {
     if(_messageController.text.isNotEmpty) {
       Map<String, dynamic> messageMap = {
         "isAlert": false,
         "message": _messageController.text,
-        "sender": "TODO: UPDATE USERNAME",
+        "sender": await DatabaseService().getCurrentUserName(),
+        "senderID": FirebaseAuth.instance.currentUser!.uid,
         "timeStamp": Timestamp.now().millisecondsSinceEpoch
       };
 

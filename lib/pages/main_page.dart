@@ -14,10 +14,53 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class MainPage extends StatelessWidget {
-  MainPage({super.key});
+  const MainPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    var provider = Provider.of<AuthService>(context, listen: false);
+
+    // Ask the user to create a username after creating an account
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if(provider.user != null && provider.user!.additionalUserInfo!.isNewUser) {
+        TextEditingController _controller = TextEditingController();
+
+        pushPopUp(context, Container(
+          padding: const EdgeInsets.all(16.0),
+          constraints: const BoxConstraints(maxWidth: 300),
+          child: Column(
+            children: [
+              TextFormField(
+                textAlign: TextAlign.center,
+                controller: _controller,
+                style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
+                decoration: const InputDecoration(
+                  hintText: "Give yourself a name...",
+                  border: InputBorder.none,
+                ),
+              ),
+
+              const SizedBox(height: 16.0),
+
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                onPressed: () {
+                  if(_controller.text.isNotEmpty) {
+                    DatabaseService().setDisplayName(_controller.text);
+                    _controller.dispose();
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text("Let's chat!"),
+              ),
+            ],
+          )
+        ));
+      }
+    });
+
     return Row(
       children: [
         MediaQuery.of(context).size.width > Consts.cutoffWidth

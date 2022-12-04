@@ -2,6 +2,7 @@ import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/viewmodels/main_view_model.dart';
+import 'package:chatapp/widgets/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chatapp/consts.dart';
@@ -24,7 +25,11 @@ class _GroupsState extends State<Groups> {
     userInfo.forEach((element) { 
       List groupIDs = ((element.data() as Map<String, dynamic>)["groups"]);
       for(var groupID in groupIDs) { groups.add(DatabaseService().getGroup(groupID)); }
-      setState(() {});
+      try { 
+        setState(() {}); 
+      } catch (e) {
+        print(e);
+      }
     });
     super.initState();
   }
@@ -44,10 +49,22 @@ class _GroupsState extends State<Groups> {
           // Get the group with this ID from the database
           // Use another StreamBuilder to pull the actual info from this group
           child: groups.isEmpty
-            ? const Center(child: CreateGroupButton())
+            ? Center(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Text("You haven't joined any groups yet."),
+                  SizedBox(height: 5.0),
+                  NoGroupsJoinGroupButton(),
+                  NoGroupsCreateGroupButton()
+                ]
+              )
+            )
             : Column(
                 children: [
-                  CreateGroupButton(),
+                  NoGroupsJoinGroupButton(),
+                  NoGroupsCreateGroupButton(),
                   ListView.builder(
                     itemCount: groups.length,
                     shrinkWrap: true,
@@ -61,15 +78,7 @@ class _GroupsState extends State<Groups> {
                           if(snapshot.hasData) {
                             return GroupTile(info: snapshot.data!.data(), index: index);
                           } else { 
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Text("You haven't joined any groups yet."),
-                                SizedBox(height: 5.0),
-                                CreateGroupButton()
-                              ]
-                            );
+                            return Container(); // ?
                           }
                         },
                       );
@@ -151,16 +160,14 @@ class _GroupTileState extends State<GroupTile> {
 }
 
 
-
-
-class CreateGroupButton extends StatefulWidget {
-  const CreateGroupButton({super.key});
+class NoGroupsJoinGroupButton extends StatefulWidget {
+  const NoGroupsJoinGroupButton({super.key});
 
   @override
-  State<CreateGroupButton> createState() => _CreateGroupButtonState();
+  State<NoGroupsJoinGroupButton> createState() => _NoGroupsJoinGroupButtonState();
 }
 
-class _CreateGroupButtonState extends State<CreateGroupButton> {
+class _NoGroupsJoinGroupButtonState extends State<NoGroupsJoinGroupButton> {
   bool hover = false;
   @override
   Widget build(BuildContext context) {
@@ -172,13 +179,115 @@ class _CreateGroupButtonState extends State<CreateGroupButton> {
         });
       },
       onTap: () {
-        showGeneralDialog(
-          barrierColor: const Color.fromARGB(175, 0, 0, 0),
-          context: context, 
-          pageBuilder: ((context, animation, secondaryAnimation) {
-            return const CreateGroupPopUp();
-          })
-        );
+        pushPopUp(context, const JoinGroupPopUp());
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            "Join a group",
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            )
+          ),
+          Icon(
+            hover ? Icons.add_circle : Icons.add,
+            size: 20.0,
+            color: Theme.of(context).colorScheme.primary
+          )
+        ],
+      ),
+    );
+  }
+}
+
+class JoinGroupPopUp extends StatefulWidget {
+  const JoinGroupPopUp({super.key});
+
+  @override
+  State<JoinGroupPopUp> createState() => _JoinGroupPopUpState();
+}
+
+class _JoinGroupPopUpState extends State<JoinGroupPopUp> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      constraints: const BoxConstraints(maxWidth: 300),
+      child: Stack(
+        children: [
+          Column(
+            children: [
+              TextFormField(
+                textAlign: TextAlign.center,
+                controller: _controller,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                decoration: const InputDecoration(
+                  hintText: "Enter the group ID",
+                  border: InputBorder.none,
+                ),
+              ),
+
+              const SizedBox(height: 16.0),
+
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                ),
+                onPressed: () {
+                  if(_controller.text.isNotEmpty) {
+                    DatabaseService().joinGroup(_controller.text);
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text("Join group"),
+              ),
+            ],
+          ),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: IconButton(
+              icon: const Icon(Icons.close),
+              padding: const EdgeInsets.all(0.0),
+              onPressed: () { Navigator.pop(context); }
+            ),
+          )
+        ],
+      ),
+    );
+  }
+}
+
+
+class NoGroupsCreateGroupButton extends StatefulWidget {
+  const NoGroupsCreateGroupButton({super.key});
+
+  @override
+  State<NoGroupsCreateGroupButton> createState() => _NoGroupsCreateGroupButtonState();
+}
+
+class _NoGroupsCreateGroupButtonState extends State<NoGroupsCreateGroupButton> {
+  bool hover = false;
+  @override
+  Widget build(BuildContext context) {
+
+    return InkWell(
+      onHover: (value) {
+        setState(() {
+          hover = value;
+        });
+      },
+      onTap: () {
+        pushPopUp(context, const CreateGroupPopUp());
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -190,7 +299,7 @@ class _CreateGroupButtonState extends State<CreateGroupButton> {
             )
           ),
           Icon(
-            hover ? Icons.add_circle : Icons.add,
+            hover ? Icons.create : Icons.create_outlined,
             size: 20.0,
             color: Theme.of(context).colorScheme.primary
           )
@@ -231,69 +340,59 @@ class _CreateGroupPopUpState extends State<CreateGroupPopUp> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      // Do this so there is a material widget ancestor for things to behave properly
-      child: Material(
-        borderRadius: const BorderRadius.all(Radius.circular(5.0)),
-        color: Colors.white,
-        // Use this to minimize height to fit content
-        child: Wrap(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16.0),
-              constraints: const BoxConstraints(maxWidth: 300),
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      Center(
-                        child: CircleAvatar(
-                          backgroundColor: Colors.grey.shade500,
-                          foregroundColor: Colors.black,
-                          radius: 45,
-                          child: Text(abbreviation, style: Theme.of(context).textTheme.headline4)
-                        ),
-                      ),
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: IconButton(
-                          icon: const Icon(Icons.close),
-                          padding: const EdgeInsets.all(0.0),
-                          onPressed: () { Navigator.pop(context); }
-                        ),
-                      )
-                    ],
-                  ),
-                  TextFormField(
-                    textAlign: TextAlign.center,
-                    controller: _controller,
-                    style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
-                    decoration: const InputDecoration(
-                      hintText: "Give your group a name...",
-                      border: InputBorder.none,
-                    ),
-                    minLines: 1,
-                    maxLines: 2,
-                  ),
-
-                  const SizedBox(height: 16.0),
-
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
-                    ),
-                    onPressed: () {
-                      DatabaseService().createGroup(_controller.text);
-                      Navigator.pop(context);
-                    },
-                    child: const Text("Create group"),
-                  ),
-                ],
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      constraints: const BoxConstraints(maxWidth: 300),
+      child: Column(
+        children: [
+          Stack(
+            children: [
+              Center(
+                child: CircleAvatar(
+                  backgroundColor: const Color.fromARGB(255, 193, 193, 193),
+                  foregroundColor: Colors.black,
+                  radius: 45,
+                  child: Text(abbreviation, style: Theme.of(context).textTheme.headline4)
+                ),
               ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  padding: const EdgeInsets.all(0.0),
+                  onPressed: () { Navigator.pop(context); }
+                ),
+              )
+            ],
+          ),
+          TextFormField(
+            textAlign: TextAlign.center,
+            controller: _controller,
+            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
+            decoration: const InputDecoration(
+              hintText: "Give your group a name...",
+              border: InputBorder.none,
             ),
-          ],
-        ),
+            minLines: 1,
+            maxLines: 2,
+          ),
+
+          const SizedBox(height: 16.0),
+
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(50),
+            ),
+            onPressed: () {
+              if(_controller.text.isNotEmpty) {
+                DatabaseService().createGroup(_controller.text);
+                Navigator.pop(context);
+              }
+            },
+            child: const Text("Create group"),
+          ),
+        ],
       ),
     );
   }
