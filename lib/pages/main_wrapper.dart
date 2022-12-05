@@ -7,7 +7,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 
 class MainWrapper extends StatelessWidget {
-  const MainWrapper({super.key});
+  MainWrapper({super.key});
+
+  final viewModel = MainViewModel();
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +22,8 @@ class MainWrapper extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           } else if(snapshot.hasData) {
             return ChangeNotifierProvider(
-              create: (context) => MainViewModel(),
-              child: MainPage(),
+              create: (context) => viewModel,
+              child: MainPage(viewModel: viewModel),
             );
           } else if(snapshot.hasError) {
             return const Center(child: Text("Something went wrong!"));

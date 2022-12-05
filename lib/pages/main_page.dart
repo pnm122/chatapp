@@ -1,6 +1,7 @@
 import 'package:chatapp/consts.dart';
 import 'package:chatapp/pages/chat_room.dart';
 import 'package:chatapp/service/database_service.dart';
+import 'package:chatapp/viewmodels/main_view_model.dart';
 import 'package:chatapp/widgets/groups.dart';
 import 'package:chatapp/widgets/custom_app_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,7 +15,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class MainPage extends StatelessWidget {
-  const MainPage({super.key});
+  const MainPage({super.key, required this.viewModel});
+  final viewModel;
+
+  final groupsPage = const Groups();
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +31,6 @@ class MainPage extends StatelessWidget {
 
         pushPopUp(context, Container(
           padding: const EdgeInsets.all(16.0),
-          constraints: const BoxConstraints(maxWidth: 300),
           child: Column(
             children: [
               TextFormField(
@@ -57,20 +60,21 @@ class MainPage extends StatelessWidget {
               ),
             ],
           )
-        ));
+        ), "Create A Username", false);
       }
     });
 
     return Row(
       children: [
         MediaQuery.of(context).size.width > Consts.cutoffWidth
-          ? Groups()
+          ? groupsPage
           : Container(),
 
         // Use expanded so it doesn't overflow (bc the other row element is a sizedbox)
         Expanded(
           child: Scaffold(
             appBar: CustomAppBar(
+              title: context.watch<MainViewModel>().selectedGroupName,
               leading: MediaQuery.of(context).size.width > Consts.cutoffWidth
                 ? null : IconButton(
                   icon: const Icon(Icons.groups),
@@ -81,7 +85,12 @@ class MainPage extends StatelessWidget {
                       // Color behind this route and in front of the one behind
                       barrierColor: Colors.black38,
                       barrierDismissible: true,
-                      pageBuilder: ((context, animation, secondaryAnimation) => Groups()),
+                      pageBuilder: ((context, animation, secondaryAnimation) => 
+                        ChangeNotifierProvider<MainViewModel>.value(
+                          value: viewModel, // Pass in the same viewmodel to this new view
+                          child: groupsPage
+                        )
+                      ),
                       transitionsBuilder: (context, animation, secondaryAnimation, child) {
                         const begin = Offset(-1.0, 0);
                         const end = Offset.zero;
@@ -95,6 +104,7 @@ class MainPage extends StatelessWidget {
                     )
                   )
                 ),
+              hasBottom: true,
               actions: <Widget>[
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: Consts.sideMargin),

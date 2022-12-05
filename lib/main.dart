@@ -68,7 +68,7 @@ class MyApp extends StatelessWidget {
           ),
           scaffoldBackgroundColor: const Color.fromARGB(255, 250, 246, 244),
         ),
-        home: const MainWrapper(),
+        home: MainWrapper(),
       ),
     );
   }

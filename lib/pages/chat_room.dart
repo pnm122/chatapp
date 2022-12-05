@@ -53,35 +53,38 @@ class _ChatRoomState extends State<ChatRoom> {
     groupID = context.watch<MainViewModel>().selectedGroupId;
     messages = context.watch<MainViewModel>().messages as Stream<QuerySnapshot<Object?>>?;
 
-    return groupID == "" 
-      ? Center(child: Text("Please select a group"))
-      : Column(
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  chatMessages(),
-                  Container(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    alignment: Alignment.bottomCenter,
-                    key: ValueKey<bool>(showScrollButton), // updates when showScrollButton is changed!
-                    child: showScrollButton
-                      ? scrollButtonAndNotifier()
-                      : const SizedBox(height: 0, width: 0),
-                  ),
-                ],
+    return Container(
+      color: Consts.backgroundColor,
+      child: groupID == "" 
+        ? Center(child: Text("Please select a group"))
+        : Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    chatMessages(),
+                    Container(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      alignment: Alignment.bottomCenter,
+                      key: ValueKey<bool>(showScrollButton), // updates when showScrollButton is changed!
+                      child: showScrollButton
+                        ? scrollButtonAndNotifier()
+                        : const SizedBox(height: 0, width: 0),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            messageSender(),
-          ],
-        );
+              messageSender(),
+            ],
+          ),
+    );
   }
 
   scrollButtonAndNotifier() {
     return Tooltip(
       preferBelow: false,
       margin: const EdgeInsets.all(4.0),
-      decoration: BoxDecoration(color: Colors.grey.shade700),
+      decoration: BoxDecoration(color: Consts.toolTipColor),
       message: "Scroll to bottom",
       child: InkWell(
         onTap: () => animateToBottom(),
@@ -108,11 +111,8 @@ class _ChatRoomState extends State<ChatRoom> {
   }
 
   messageSender() {
-    return Container(
+    return SizedBox(
       width: MediaQuery.of(context).size.width,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-      ),
 
       child: Padding(
         padding: Consts.messageSenderPadding,

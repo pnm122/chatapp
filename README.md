@@ -11,11 +11,11 @@ A group-based chat application created by Pierce Martin
 * Sign in with email and password
 * Force user to create a username when they sign in for the first time
 * Show the list of groups you're in and be able to select between them
+* Name of group above chat page
+* Unify colors
 
 ### To Do
-* Name of group above chat page
 * Group info page (users and their logged-in status, group ID, other metadata)
-* Unify colors
 * Get enter key to work
 * Font on mobile browser?
 * Group together messages in similar times
@@ -33,5 +33,6 @@ A group-based chat application created by Pierce Martin
 * Scroll to bottom on new message is a little buggy? Doesn't always go all the way to the bottom
 * setState() being called after widget destruction in (i think) groups.dart
 * Firebase permissions error on log out, not sure where it's coming from
+* setState() called after dispose when in smaller view
   
   

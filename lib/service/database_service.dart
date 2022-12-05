@@ -29,6 +29,7 @@ class DatabaseService {
       "name": groupName,
       "createdTime": DateTime.now().millisecondsSinceEpoch,
       "lastMessage": "",
+      "lastMessageSender": "",
       "lastMessageTimeStamp": -1,
       "members": [FirebaseAuth.instance.currentUser!.uid],
       // Also will have a collection of messages
@@ -103,6 +104,12 @@ class DatabaseService {
   }
 
   sendMessage(String groupID, Map<String, dynamic> messageMap) async {
-    groupCollection.doc(groupID).collection("messages").add(messageMap);
+    var group = groupCollection.doc(groupID);
+    group.collection("messages").add(messageMap);
+    group.update({
+      "lastMessage": messageMap["message"],
+      "lastMessageSender": messageMap["sender"],
+      "lastMessageTimeStamp": messageMap["timeStamp"],
+    });
   }
 }

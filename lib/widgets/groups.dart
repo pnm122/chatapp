@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/viewmodels/main_view_model.dart';
 import 'package:chatapp/widgets/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chatapp/consts.dart';
 import 'package:chatapp/widgets/custom_app_bar.dart';
@@ -17,38 +20,60 @@ class Groups extends StatefulWidget {
 }
 
 class _GroupsState extends State<Groups> {
+  List groupIDs = List.empty(growable: true);
   List<Stream> groups = List.empty(growable: true);
+  StreamSubscription? _subscription;
 
   @override
   void initState() {
-    Stream<DocumentSnapshot> userInfo = DatabaseService().getCurrentUserInfo();
-    userInfo.forEach((element) { 
-      List groupIDs = ((element.data() as Map<String, dynamic>)["groups"]);
-      for(var groupID in groupIDs) { groups.add(DatabaseService().getGroup(groupID)); }
-      try { 
-        setState(() {}); 
-      } catch (e) {
-        print(e);
+    _subscription = DatabaseService().getCurrentUserInfo().listen((event) { 
+      if(FirebaseAuth.instance.currentUser == null) { return; } // Avoid setState calls on the user logging out
+
+      setState(() {
+        if(event.data() != null) {
+          groupIDs = (event.data() as Map<String, dynamic>)["groups"];
+        }
+      });
+      groups = List.empty(growable: true);
+      for(var id in groupIDs) {
+        groups.add(DatabaseService().getGroup(id.toString()));
       }
     });
     super.initState();
   }
 
   @override
+  void dispose() {
+    _subscription!.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 250,
+      width: 300,
       child: Scaffold(
-        appBar: const CustomAppBar(
-          centerTitle: true,
-          title: Text("Your Groups"),
+        appBar: CustomAppBar(
+          title: "Your Groups",
+          backgroundColor: Consts.foregroundColor,
+          actions: [
+            Padding(
+              padding: Consts.appBarIconPadding,
+              child: const ActionButton(defaultIcon: Icons.add, hoverIcon: Icons.add_circle, popUpWidget: JoinGroupPopUp(), title: "Join Group"),
+            ),
+            Padding(
+              padding: Consts.appBarIconPadding,
+              child: const ActionButton(defaultIcon: Icons.create_outlined, hoverIcon: Icons.create, popUpWidget: CreateGroupPopUp(), title: "Create Group"),
+            ),
+            const Padding(padding: EdgeInsets.all(4.0)),
+          ]
         ),
         body: Container(
-          color: Colors.white,
+          color: Consts.foregroundColor,
           // Outer StreamBuilder: list of all group ID's associated with this user
           // Get the group with this ID from the database
           // Use another StreamBuilder to pull the actual info from this group
-          child: groups.isEmpty
+          child: groupIDs.isEmpty
             ? Center(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -57,36 +82,72 @@ class _GroupsState extends State<Groups> {
                   Text("You haven't joined any groups yet."),
                   SizedBox(height: 5.0),
                   NoGroupsJoinGroupButton(),
+                  SizedBox(height: 5.0),
                   NoGroupsCreateGroupButton()
                 ]
               )
             )
-            : Column(
-                children: [
-                  NoGroupsJoinGroupButton(),
-                  NoGroupsCreateGroupButton(),
-                  ListView.builder(
-                    itemCount: groups.length,
-                    shrinkWrap: true,
-                    itemBuilder: (context, index) {
-                      return StreamBuilder(
-                        stream: groups[index],
-                        builder:(context, AsyncSnapshot snapshot) {
-                          if(snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
-                          }
-                          if(snapshot.hasData) {
-                            return GroupTile(info: snapshot.data!.data(), index: index);
-                          } else { 
-                            return Container(); // ?
-                          }
-                        },
-                      );
-                    },
-                    
-                  ),
-                ],
-              ),
+            : ListView.builder(
+              itemCount: groups.length + 2, // +2 to allow padding on both sides of the list
+              shrinkWrap: true,
+              physics: BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                if(index == 0) { return const Padding(padding: EdgeInsets.all(4.0)); }
+                if(index == groups.length + 1) { return const Padding(padding: EdgeInsets.all(4.0)); }
+                return StreamBuilder(
+                  stream: groups[index - 1],
+                  builder:(context, AsyncSnapshot snapshot) {
+                    if(snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if(snapshot.hasData) {
+                      return GroupTile(info: snapshot.data!.data(), index: index);
+                    } else { 
+                      return Container(); // ?
+                    }
+                  },
+                );
+              },
+              
+            ),
+        )
+      ),
+    );
+  }
+}
+
+class ActionButton extends StatefulWidget {
+  const ActionButton({super.key, required this.defaultIcon, required this.hoverIcon, required this.popUpWidget, required this.title});
+  final IconData defaultIcon;
+  final IconData hoverIcon;
+  final Widget popUpWidget;
+  final String title;
+
+  @override
+  State<ActionButton> createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<ActionButton> {
+  bool hovering = false;
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      preferBelow: false,
+      decoration: BoxDecoration(color: Consts.toolTipColor),
+      message: widget.title,
+      child: InkWell(
+        onHover:(hover) {
+          setState(() {
+            hovering = hover;
+          });
+        },
+        onTap: () {
+          pushPopUp(context, widget.popUpWidget, widget.title, true);
+        },
+        child: Icon(
+          hovering ? widget.hoverIcon : widget.defaultIcon,
+          size: 28,
+          color: Theme.of(context).colorScheme.primary,
         )
       ),
     );
@@ -103,56 +164,96 @@ class GroupTile extends StatefulWidget {
 }
 
 class _GroupTileState extends State<GroupTile> {
+  bool hovering = false;
+
   @override
   Widget build(BuildContext context) {
+
     int selectedIndex = context.watch<MainViewModel>().selectedIndex;
-    return InkWell(
-      onTap: () {
-        context.read<MainViewModel>().setSelectedIndex(widget.index);
-        context.read<MainViewModel>().setSelectedGroupId(widget.info["id"]);
-      },
-      child: Container(
-        padding: Consts.groupTilePadding,
-        color: widget.index == selectedIndex
-          ? const Color.fromARGB(255, 245, 226, 208)
-          : Colors.white,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              backgroundColor: widget.index == selectedIndex ? Theme.of(context).colorScheme.primary : Colors.grey.shade500,
-              foregroundColor: widget.index == selectedIndex ? Colors.white : Colors.black, // Not working?
-              radius: 24,
-              child: Text(HelperFunctions.abbreviate(widget.info["name"]), style: Theme.of(context).textTheme.headline6)
-            ),
 
-            const SizedBox(width: 8.0),
+    return Padding(
+      padding: Consts.groupTileMargin,
+      child: InkWell(
+        onTap: () {
+          context.read<MainViewModel>().setSelectedIndex(widget.index);
+          context.read<MainViewModel>().setSelectedGroupId(widget.info["id"]);
+          context.read<MainViewModel>().setSelectedGroupName(widget.info["name"]);
 
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Title of the group
-                Text(
-                  widget.info["name"],
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+          if(MediaQuery.of(context).size.width <= Consts.cutoffWidth) {
+            Navigator.pop(context);
+          }
+        },
+        onHover: (hover) {
+          setState(() {
+            hovering = hover;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: Consts.groupTilePadding,
+          decoration: BoxDecoration(
+            color: widget.index == selectedIndex
+              ? Consts.selectedColor
+              : Consts.backgroundColor,
+            borderRadius: const BorderRadius.all(Radius.circular(12.0)),
+            boxShadow: [
+              hovering ? Consts.hoverTileShadow : Consts.tileShadow
+            ],
+          ),
+          
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                backgroundColor: widget.index == selectedIndex ? Consts.backgroundColor : Colors.grey.shade300,
+                foregroundColor: Colors.black, // Not working?
+                radius: 24,
+                child: Text(HelperFunctions.abbreviate(widget.info["name"]), style: Theme.of(context).textTheme.headline6)
+              ),
+
+              const SizedBox(width: 8.0),
+
+              Expanded(
+                child: Container(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Title of the group
+                      Text(
+                        widget.info["name"],
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w700, 
+                          color: widget.index == selectedIndex ? Consts.backgroundColor : Colors.black,
+                        ),
+                      ),
+              
+                      const SizedBox(height: 5.0),
+              
+                      // Last message sent
+                      widget.info["lastMessage"] == ""
+                        ? Text(
+                            "No messages yet.",
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: widget.index == selectedIndex ? Colors.white70 : Colors.grey.shade600, 
+                              fontStyle: FontStyle.italic
+                            ),
+                          )
+                        : Container(
+                          child: Text(
+                              widget.info["lastMessage"],
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: widget.index == selectedIndex ? Colors.white70 : Colors.grey.shade600, 
+                              ),
+                            ),
+                        )
+                    ],
+                  ),
                 ),
-
-                const SizedBox(height: 5.0),
-
-                // Last message sent
-                widget.info["lastMessage"] == ""
-                  ? Text(
-                      "No messages yet.",
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey, fontStyle: FontStyle.italic),
-                    )
-                  : Text(
-                      widget.info["lastMessage"],
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
-                    )
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -179,20 +280,19 @@ class _NoGroupsJoinGroupButtonState extends State<NoGroupsJoinGroupButton> {
         });
       },
       onTap: () {
-        pushPopUp(context, const JoinGroupPopUp());
+        pushPopUp(context, const JoinGroupPopUp(), "Join Group", true);
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             "Join a group",
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             )
           ),
           Icon(
             hover ? Icons.add_circle : Icons.add,
-            size: 20.0,
             color: Theme.of(context).colorScheme.primary
           )
         ],
@@ -221,46 +321,32 @@ class _JoinGroupPopUpState extends State<JoinGroupPopUp> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16.0),
-      constraints: const BoxConstraints(maxWidth: 300),
-      child: Stack(
+      child: Column(
         children: [
-          Column(
-            children: [
-              TextFormField(
-                textAlign: TextAlign.center,
-                controller: _controller,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-                decoration: const InputDecoration(
-                  hintText: "Enter the group ID",
-                  border: InputBorder.none,
-                ),
-              ),
-
-              const SizedBox(height: 16.0),
-
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                ),
-                onPressed: () {
-                  if(_controller.text.isNotEmpty) {
-                    DatabaseService().joinGroup(_controller.text);
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text("Join group"),
-              ),
-            ],
-          ),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: IconButton(
-              icon: const Icon(Icons.close),
-              padding: const EdgeInsets.all(0.0),
-              onPressed: () { Navigator.pop(context); }
+          TextFormField(
+            textAlign: TextAlign.center,
+            controller: _controller,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+            decoration: const InputDecoration(
+              hintText: "Enter the group ID",
+              border: InputBorder.none,
             ),
-          )
+          ),
+
+          const SizedBox(height: 16.0),
+
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(50),
+            ),
+            onPressed: () {
+              if(_controller.text.isNotEmpty) {
+                DatabaseService().joinGroup(_controller.text);
+                Navigator.pop(context);
+              }
+            },
+            child: const Text("Join group"),
+          ),
         ],
       ),
     );
@@ -287,20 +373,19 @@ class _NoGroupsCreateGroupButtonState extends State<NoGroupsCreateGroupButton> {
         });
       },
       onTap: () {
-        pushPopUp(context, const CreateGroupPopUp());
+        pushPopUp(context, const CreateGroupPopUp(), "Create a group", true);
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             "Create a group",
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w700,
             )
           ),
           Icon(
             hover ? Icons.create : Icons.create_outlined,
-            size: 20.0,
             color: Theme.of(context).colorScheme.primary
           )
         ],
@@ -342,29 +427,15 @@ class _CreateGroupPopUpState extends State<CreateGroupPopUp> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16.0),
-      constraints: const BoxConstraints(maxWidth: 300),
       child: Column(
         children: [
-          Stack(
-            children: [
-              Center(
-                child: CircleAvatar(
-                  backgroundColor: const Color.fromARGB(255, 193, 193, 193),
-                  foregroundColor: Colors.black,
-                  radius: 45,
-                  child: Text(abbreviation, style: Theme.of(context).textTheme.headline4)
-                ),
-              ),
-              Positioned(
-                top: 0,
-                right: 0,
-                child: IconButton(
-                  icon: const Icon(Icons.close),
-                  padding: const EdgeInsets.all(0.0),
-                  onPressed: () { Navigator.pop(context); }
-                ),
-              )
-            ],
+          Center(
+            child: CircleAvatar(
+              backgroundColor: const Color.fromARGB(255, 193, 193, 193),
+              foregroundColor: Colors.black,
+              radius: 45,
+              child: Text(abbreviation, style: Theme.of(context).textTheme.headline4)
+            ),
           ),
           TextFormField(
             textAlign: TextAlign.center,
