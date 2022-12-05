@@ -193,7 +193,7 @@ class _GroupTileState extends State<GroupTile> {
           padding: Consts.groupTilePadding,
           decoration: BoxDecoration(
             color: widget.index == selectedIndex
-              ? Consts.selectedColor
+              ? Theme.of(context).colorScheme.primary
               : Consts.backgroundColor,
             borderRadius: const BorderRadius.all(Radius.circular(12.0)),
             boxShadow: [
@@ -373,7 +373,7 @@ class _NoGroupsCreateGroupButtonState extends State<NoGroupsCreateGroupButton> {
         });
       },
       onTap: () {
-        pushPopUp(context, const CreateGroupPopUp(), "Create a group", true);
+        pushPopUp(context, const CreateGroupPopUp(), "Create Group", true);
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,

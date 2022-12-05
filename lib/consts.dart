@@ -19,16 +19,14 @@ class Consts {
   static EdgeInsets groupSectionPadding =  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
   static EdgeInsets groupTilePadding = const EdgeInsets.all(12.0);
   static EdgeInsets groupTileMargin = const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0);
-  static const Color hoverColor = Color.fromARGB(255, 245, 245, 245);
-  static const Color selectedColor = Color.fromARGB(255, 255, 115, 0); // semi-transparent primary color
-  static const Color foregroundColor = Color.fromARGB(255, 255, 251, 247); // i.e. chat background
+  static const Color foregroundColor = Color.fromARGB(255, 241, 250, 241); // i.e. chat background
   static const Color backgroundColor = Color.fromARGB(255, 255, 255, 255); // i.e. groups background
    static const Color toolTipColor = Color.fromARGB(255, 73, 73, 73);
 
   static const tileShadow = BoxShadow(color: Colors.black12, offset: Offset(2, 5), blurRadius: 12.0);
   static const hoverTileShadow = BoxShadow(color: Colors.black26, offset: Offset(2, 5), blurRadius: 6.0);
 
-  static const Color sentColor = Color.fromARGB(255, 203, 67, 33);
+  static const Color sentColor = Color.fromARGB(255, 41, 106, 238);
   static const Color receivedColor = Color.fromARGB(255, 224, 224, 224);
   static const Color senderColor = Color.fromARGB(255, 99, 99, 99);
   static const Radius messageRadius = Radius.circular(18);

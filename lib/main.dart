@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
         title: 'Chat App',
         theme: ThemeData(
           colorScheme: const ColorScheme( 
-            primary: Color.fromARGB(255, 255, 115, 0),
+            primary: Color.fromARGB(255, 61, 162, 61),
             onPrimary: Colors.white,
             secondary: Colors.white,
             onSecondary: Colors.black,

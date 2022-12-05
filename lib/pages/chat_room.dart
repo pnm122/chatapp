@@ -142,9 +142,9 @@ class _ChatRoomState extends State<ChatRoom> {
                 onTap: () => sendMessage(),
                 child: Padding(
                   padding: Consts.innerSenderPadding,
-                  child: Icon(
+                  child: const Icon(
                     Icons.send,
-                    color: Theme.of(context).colorScheme.primary, 
+                    color: Consts.sentColor, 
                   ),
                 ),
               )
