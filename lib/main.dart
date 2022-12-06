@@ -53,6 +53,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Chat App',
         theme: ThemeData(
+          fontFamily: "Inter",
           colorScheme: const ColorScheme( 
             primary: Color.fromARGB(255, 7, 181, 94),
             onPrimary: Colors.white,

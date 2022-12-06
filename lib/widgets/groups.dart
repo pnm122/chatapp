@@ -54,7 +54,10 @@ class _GroupsState extends State<Groups> {
       width: 300,
       child: Scaffold(
         appBar: CustomAppBar(
-          title: "Your Groups",
+          title: Text(
+            "Your Groups",
+            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
+          ) ,
           backgroundColor: Consts.backgroundColor,
           actions: [
             Padding(
@@ -275,7 +278,8 @@ class _GroupTileState extends State<GroupTile> {
                           child: Text(
                             widget.info["name"],
                             maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                            // ellipsis bugs out with custom font
+                            overflow: TextOverflow.clip,
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w700, 
                               color: widget.index == selectedIndex ? Theme.of(context).colorScheme.primary : Colors.black,
@@ -304,7 +308,8 @@ class _GroupTileState extends State<GroupTile> {
                         )
                       : RichText(
                           maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          // ellipsis bugs out with custom font
+                          overflow: TextOverflow.clip,
                           text: TextSpan(
                             text: "${widget.info["lastMessageSender"]}: ",
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(

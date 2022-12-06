@@ -22,6 +22,7 @@ class Consts {
   static const Color toolTipColor = Color.fromARGB(255, 73, 73, 73);
   static const Color hoverColor = Color.fromARGB(255, 241, 241, 241);
   static const Color selectedColor = foregroundColor;
+  static const Color successColor = Color(0xFF44CC44);
 
   static const Color sentColor = Color.fromARGB(255, 56, 141, 99);
   static const Color receivedColor = Color.fromARGB(255, 224, 224, 224);

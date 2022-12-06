@@ -5,6 +5,7 @@ import 'package:chatapp/viewmodels/main_view_model.dart';
 import 'package:chatapp/widgets/groups.dart';
 import 'package:chatapp/widgets/custom_app_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:chatapp/service/auth_service.dart';
@@ -23,6 +24,8 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var provider = Provider.of<AuthService>(context, listen: false);
+
+    var selectedGroupName = context.watch<MainViewModel>().selectedGroupName;
 
     // Ask the user to create a username after creating an account
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -80,7 +83,41 @@ class MainPage extends StatelessWidget {
             ),
             child: Scaffold(
               appBar: CustomAppBar(
-                title: context.watch<MainViewModel>().selectedGroupName,
+                title: selectedGroupName == "" ? null : Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          selectedGroupName,
+                          style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        Text(
+                          "ID: ${context.read<MainViewModel>().selectedGroupId}",
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.black54),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(width: 4.0),
+
+                    InkWell(
+                      onTap: () {
+                        Clipboard.setData(ClipboardData(text: context.read<MainViewModel>().selectedGroupId))
+                          .then((_) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Copied Group ID to clipboard."),
+                                backgroundColor: Consts.successColor,
+                              )
+                            );
+                          });
+                      },
+                      child: const Icon(Icons.copy, size: 14),
+                    ),
+                  ],
+                ),
                 leading: MediaQuery.of(context).size.width > Consts.cutoffWidth
                   ? null : IconButton(
                     icon: const Icon(Icons.groups),

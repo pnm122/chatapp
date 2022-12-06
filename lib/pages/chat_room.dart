@@ -122,7 +122,7 @@ class _ChatRoomState extends State<ChatRoom> {
               color: Colors.black12,
               width: 1.0,
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(18),
           ),
           child: Row(
             children: <Widget>[
