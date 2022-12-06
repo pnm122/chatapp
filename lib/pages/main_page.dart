@@ -72,54 +72,67 @@ class MainPage extends StatelessWidget {
 
         // Use expanded so it doesn't overflow (bc the other row element is a sizedbox)
         Expanded(
-          child: Scaffold(
-            appBar: CustomAppBar(
-              title: context.watch<MainViewModel>().selectedGroupName,
-              leading: MediaQuery.of(context).size.width > Consts.cutoffWidth
-                ? null : IconButton(
-                  icon: const Icon(Icons.groups),
-                  // Using this instead of drawer because Scaffold.of(context).openDrawer() didn't like me for some reason
-                  onPressed: () => Navigator.of(context).push(
-                    PageRouteBuilder(
-                      opaque: false,
-                      // Color behind this route and in front of the one behind
-                      barrierColor: Colors.black38,
-                      barrierDismissible: true,
-                      pageBuilder: ((context, animation, secondaryAnimation) => 
-                        ChangeNotifierProvider<MainViewModel>.value(
-                          value: viewModel, // Pass in the same viewmodel to this new view
-                          child: groupsPage
-                        )
-                      ),
-                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                        const begin = Offset(-1.0, 0);
-                        const end = Offset.zero;
-                        const curve = Curves.ease;
-                        final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                        return SlideTransition(
-                          position: animation.drive(tween),
-                          child: child,
-                        );
-                      },
-                    )
-                  )
-                ),
-              hasBottom: true,
-              actions: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: Consts.sideMargin),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      DatabaseService().signOut();
-                      Provider.of<AuthService>(context, listen: false).signOut();
-                      pushScreenReplace(context, const LoginPage());
-                    },
-                    child: const Text("Log out"),
-                  ),
-                ),
+          child: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                Consts.shadow
               ]
             ),
-            body: const ChatRoom(),
+            child: Scaffold(
+              appBar: CustomAppBar(
+                title: context.watch<MainViewModel>().selectedGroupName,
+                leading: MediaQuery.of(context).size.width > Consts.cutoffWidth
+                  ? null : IconButton(
+                    icon: const Icon(Icons.groups),
+                    // Using this instead of drawer because Scaffold.of(context).openDrawer() didn't like me for some reason
+                    onPressed: () => Navigator.of(context).push(
+                      PageRouteBuilder(
+                        opaque: false,
+                        // Color behind this route and in front of the one behind
+                        barrierColor: Colors.black38,
+                        barrierDismissible: true,
+                        pageBuilder: ((context, animation, secondaryAnimation) => 
+                          ChangeNotifierProvider<MainViewModel>.value(
+                            value: viewModel, // Pass in the same viewmodel to this new view
+                            child: groupsPage
+                          )
+                        ),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(-1.0, 0);
+                          const end = Offset.zero;
+                          const curve = Curves.ease;
+                          final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                          return SlideTransition(
+                            position: animation.drive(tween),
+                            child: child,
+                          );
+                        },
+                      )
+                    )
+                  ),
+                hasBottom: true,
+                actions: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: Consts.sideMargin),
+                    child: TextButton(
+                      onPressed: () {
+                        DatabaseService().signOut();
+                        Provider.of<AuthService>(context, listen: false).signOut();
+                        pushScreenReplace(context, const LoginPage());
+                      },
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                        foregroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.primary),
+                        shadowColor: MaterialStateProperty.all(Colors.transparent), 
+                        padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 0))
+                      ),
+                      child: const Text("Log out"),
+                    ),
+                  ),
+                ]
+              ),
+              body: const ChatRoom(),
+            ),
           ),
         ),
       ],

@@ -55,7 +55,7 @@ class _GroupsState extends State<Groups> {
       child: Scaffold(
         appBar: CustomAppBar(
           title: "Your Groups",
-          backgroundColor: Consts.foregroundColor,
+          backgroundColor: Consts.backgroundColor,
           actions: [
             Padding(
               padding: Consts.appBarIconPadding,
@@ -69,7 +69,7 @@ class _GroupsState extends State<Groups> {
           ]
         ),
         body: Container(
-          color: Consts.foregroundColor,
+          color: Consts.backgroundColor,
           // Outer StreamBuilder: list of all group ID's associated with this user
           // Get the group with this ID from the database
           // Use another StreamBuilder to pull the actual info from this group
@@ -88,17 +88,16 @@ class _GroupsState extends State<Groups> {
               )
             )
             : ListView.builder(
-              itemCount: groups.length + 2, // +2 to allow padding on both sides of the list
+              itemCount: groups.length + 1, // +1 to allow padding on the end of the list
               shrinkWrap: true,
-              physics: BouncingScrollPhysics(),
+              physics: const BouncingScrollPhysics(),
               itemBuilder: (context, index) {
-                if(index == 0) { return const Padding(padding: EdgeInsets.all(4.0)); }
-                if(index == groups.length + 1) { return const Padding(padding: EdgeInsets.all(4.0)); }
+                if(index == groups.length) { return const Padding(padding: EdgeInsets.all(4.0)); }
                 return StreamBuilder(
-                  stream: groups[index - 1],
+                  stream: groups[index],
                   builder:(context, AsyncSnapshot snapshot) {
                     if(snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
+                      return const Center(child: GroupTilePlaceholder());
                     }
                     if(snapshot.hasData) {
                       return GroupTile(info: snapshot.data!.data(), index: index);
@@ -132,8 +131,7 @@ class _ActionButtonState extends State<ActionButton> {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      preferBelow: false,
-      decoration: BoxDecoration(color: Consts.toolTipColor),
+      decoration: const BoxDecoration(color: Consts.toolTipColor),
       message: widget.title,
       child: InkWell(
         onHover:(hover) {
@@ -150,6 +148,56 @@ class _ActionButtonState extends State<ActionButton> {
           color: Theme.of(context).colorScheme.primary,
         )
       ),
+    );
+  }
+}
+
+class GroupTilePlaceholder extends StatefulWidget {
+  const GroupTilePlaceholder({super.key});
+
+  @override
+  State<GroupTilePlaceholder> createState() => _GroupTilePlaceholderState();
+}
+
+class _GroupTilePlaceholderState extends State<GroupTilePlaceholder> with SingleTickerProviderStateMixin {
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: Consts.groupTileHeight,
+      padding: Consts.groupTilePadding,
+      constraints: const BoxConstraints(minHeight: Consts.groupTileHeight),
+      color: Consts.backgroundColor,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const ShimmerPlaceholder(
+            height: 52,
+            width: 52,
+            isRounded: true,
+          ),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                ShimmerPlaceholder(
+                  height: 12, 
+                  width: 50, 
+                  isRounded: false
+                ),
+                SizedBox(height: 3),
+                ShimmerPlaceholder(
+                  height: 12, 
+                  width: 150, 
+                  isRounded: false
+                ),
+              ],
+            ),
+          )
+        ],
+      )
     );
   }
 }
@@ -171,89 +219,112 @@ class _GroupTileState extends State<GroupTile> {
 
     int selectedIndex = context.watch<MainViewModel>().selectedIndex;
 
-    return Padding(
-      padding: Consts.groupTileMargin,
-      child: InkWell(
-        onTap: () {
+    return InkWell(
+      onTap: () {
+        // Don't need to load a new group page if it's already selected
+        if(widget.index != selectedIndex) {
           context.read<MainViewModel>().setSelectedIndex(widget.index);
           context.read<MainViewModel>().setSelectedGroupId(widget.info["id"]);
           context.read<MainViewModel>().setSelectedGroupName(widget.info["name"]);
 
+          // For when the groups page appears via button
           if(MediaQuery.of(context).size.width <= Consts.cutoffWidth) {
             Navigator.pop(context);
           }
-        },
-        onHover: (hover) {
-          setState(() {
-            hovering = hover;
-          });
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: Consts.groupTilePadding,
-          decoration: BoxDecoration(
-            color: widget.index == selectedIndex
-              ? Theme.of(context).colorScheme.primary
-              : Consts.backgroundColor,
-            borderRadius: const BorderRadius.all(Radius.circular(12.0)),
-            boxShadow: [
-              hovering ? Consts.hoverTileShadow : Consts.tileShadow
-            ],
-          ),
-          
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                backgroundColor: widget.index == selectedIndex ? Consts.backgroundColor : Colors.grey.shade300,
-                foregroundColor: Colors.black, // Not working?
-                radius: 24,
-                child: Text(HelperFunctions.abbreviate(widget.info["name"]), style: Theme.of(context).textTheme.headline6)
-              ),
-
-              const SizedBox(width: 8.0),
-
-              Expanded(
-                child: Container(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Title of the group
-                      Text(
-                        widget.info["name"],
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w700, 
-                          color: widget.index == selectedIndex ? Consts.backgroundColor : Colors.black,
-                        ),
-                      ),
-              
-                      const SizedBox(height: 5.0),
-              
-                      // Last message sent
-                      widget.info["lastMessage"] == ""
-                        ? Text(
-                            "No messages yet.",
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: widget.index == selectedIndex ? Colors.white70 : Colors.grey.shade600, 
-                              fontStyle: FontStyle.italic
-                            ),
-                          )
-                        : Container(
+        }
+      },
+      onHover: (hover) {
+        setState(() {
+          hovering = hover;
+        });
+      },
+      child: AnimatedContainer(
+        duration: Consts.animationDuration,
+        padding: Consts.groupTilePadding,
+        constraints: const BoxConstraints(minHeight: Consts.groupTileHeight),
+        color: widget.index == selectedIndex
+          ? Consts.selectedColor
+          : hovering ? Consts.hoverColor : Consts.backgroundColor,
+        
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              backgroundColor: widget.index == selectedIndex ? Theme.of(context).colorScheme.primary : Color.fromARGB(44, 0, 0, 0),
+              radius: 26,
+              child: Text(
+                HelperFunctions.abbreviate(widget.info["name"]),
+                style: Theme.of(context).textTheme.headline6?.copyWith(
+                  color: widget.index == selectedIndex ? Colors.white : Colors.black,
+                )
+              )
+            ),
+        
+            const SizedBox(width: 8.0),
+        
+            Expanded(
+              child: Container(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Title of the group
+                    Row(
+                      children: [
+                        Expanded(
                           child: Text(
-                              widget.info["lastMessage"],
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: widget.index == selectedIndex ? Colors.white70 : Colors.grey.shade600, 
-                              ),
+                            widget.info["name"],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w700, 
+                              color: widget.index == selectedIndex ? Theme.of(context).colorScheme.primary : Colors.black,
                             ),
+                          ),
+                        ),
+                        widget.info["lastMessage"] == "" ? Container() : Text(
+                          HelperFunctions.timeStampToStringShort(widget.info["lastMessageTimeStamp"]),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.black38, 
+                          ),
+                        ),
+                      ],
+                    ),
+            
+                    const SizedBox(height: 3.0),
+            
+                    // Last message sent
+                    widget.info["lastMessage"] == ""
+                      ? Text(
+                          "No messages yet.",
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.black54,
+                            fontStyle: FontStyle.italic
+                          ),
                         )
-                    ],
-                  ),
+                      : RichText(
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          text: TextSpan(
+                            text: "${widget.info["lastMessageSender"]}: ",
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.black54,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: widget.info["lastMessage"],
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.black38, 
+                                ),
+                              ),
+                            ]
+                          ),
+                      )
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

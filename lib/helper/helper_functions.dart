@@ -46,7 +46,7 @@ class HelperFunctions {
       .difference(DateTime(t.year, t.month, t.day)).inDays;
 
     // Add the year in if the message is from another year for clarity
-    if(DateTime.now().year != t.year) {
+    if(now.year != t.year) {
       return "${daysShort[t.weekday - 1]}, ${months[t.month - 1]} ${t.day} ${t.year}, $hr:$min $ampm";
     }
 
@@ -59,6 +59,34 @@ class HelperFunctions {
       return "Yesterday $hr:$min $ampm";
     } else {
       return "Today $hr:$min $ampm";
+    }
+  }
+
+  static String timeStampToStringShort(int ms) {
+    DateTime t = Timestamp.fromMillisecondsSinceEpoch(ms).toDate();
+    int hr = t.hour == 0 || t.hour == 12
+      ? 12
+      : t.hour % 12;
+    String min = t.minute < 10
+      ? "0${t.minute}"
+      : t.minute.toString();
+    String ampm = t.hour > 11 ? "PM" : "AM";
+    DateTime now = DateTime.now();
+    int daysOld = DateTime(now.year, now.month, now.day)
+      .difference(DateTime(t.year, t.month, t.day)).inDays;
+
+    if(now.year != t.year) {
+      return "${months[t.month - 1]} ${t.year}";
+    }
+
+    if(daysOld > 6) {
+      return "${months[t.month - 1]} ${t.day}";
+    } else if(daysOld > 1) {
+      return daysLong[t.weekday - 1];
+    } else if(daysOld == 1) {
+      return "Yesterday";
+    } else {
+      return "$hr:$min $ampm";
     }
   }
 

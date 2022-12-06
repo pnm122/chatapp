@@ -53,9 +53,10 @@ class Message extends StatelessWidget {
                       padding: Consts.messagePadding,
                       child: Text(
                         message,
-                        style: sentByMe
-                          ? Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white)
-                          : Theme.of(context).textTheme.bodyMedium,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: sentByMe
+                          ? Consts.sentColor.computeLuminance() > 0.5 ? const Color.fromARGB(193, 0, 0, 0) : Colors.white
+                          : Consts.receivedColor.computeLuminance() > 0.5 ? Colors.black : Colors.white
+                        )
                       ),
                     ),
                   ],

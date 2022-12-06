@@ -13,13 +13,15 @@ A group-based chat application created by Pierce Martin
 * Show the list of groups you're in and be able to select between them
 * Name of group above chat page
 * Unify colors
+* Clicking on current group shouldn't reload the messages
+* Get enter key to work
 
 ### To Do
-* Group info page (users and their logged-in status, group ID, other metadata)
-* Get enter key to work
 * Font on mobile browser?
+* Group info page (users and their logged-in status, group ID, other metadata)
 * Group together messages in similar times
 * Tell when a person is in the browser? Or when they go AFK?
+* Profile pictures & Group pictures
 * Replies (using gestures? :o)
 * Attachments
 * Notification bubble on groups icon when a group has new messages?

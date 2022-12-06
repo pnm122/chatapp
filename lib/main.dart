@@ -22,7 +22,7 @@ void main() async {
     ),
   );
 
-  FirebaseAuth.instance.setPersistence(Persistence.NONE);
+  FirebaseAuth.instance.setPersistence(Persistence.SESSION);
 
   // ANY DATABASE FUNCTIONS REQUIRE US TO BE SIGNED IN FIRST...
   /*html.window.onUnload.listen((event) async {
@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
         title: 'Chat App',
         theme: ThemeData(
           colorScheme: const ColorScheme( 
-            primary: Color.fromARGB(255, 61, 162, 61),
+            primary: Color.fromARGB(255, 7, 181, 94),
             onPrimary: Colors.white,
             secondary: Colors.white,
             onSecondary: Colors.black,

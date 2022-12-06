@@ -54,7 +54,7 @@ class _ChatRoomState extends State<ChatRoom> {
     messages = context.watch<MainViewModel>().messages as Stream<QuerySnapshot<Object?>>?;
 
     return Container(
-      color: Consts.backgroundColor,
+      color: Consts.foregroundColor,
       child: groupID == "" 
         ? Center(child: Text("Please select a group"))
         : Column(
@@ -115,24 +115,30 @@ class _ChatRoomState extends State<ChatRoom> {
       width: MediaQuery.of(context).size.width,
 
       child: Padding(
-        padding: Consts.messageSenderPadding,
+        padding: const EdgeInsets.all(16.0),
         child: Container(
           decoration: BoxDecoration(
             border: Border.all(
               color: Colors.black12,
               width: 1.0,
             ),
-            borderRadius: BorderRadius.circular(99),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: <Widget>[
               Expanded(
                 child: TextFormField(
+                  onFieldSubmitted: (e) {
+                    sendMessage();
+                  },
+                  // Allow enter to submit message
+                  keyboardType: TextInputType.text,
                   controller: _messageController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: "Send a message...",
                     border: InputBorder.none,
-                    contentPadding: Consts.innerSenderPadding,
+                    contentPadding: EdgeInsets.only(left: 16.0, top: 16.0, bottom: 16.0),
+                    isDense: true,
                   ),
                   minLines: 1,
                   maxLines: 3,
@@ -140,9 +146,9 @@ class _ChatRoomState extends State<ChatRoom> {
               ),
               InkWell(
                 onTap: () => sendMessage(),
-                child: Padding(
-                  padding: Consts.innerSenderPadding,
-                  child: const Icon(
+                child: const Padding(
+                  padding: EdgeInsets.only(top: 16.0, right: 16.0, bottom: 16.0),
+                  child: Icon(
                     Icons.send,
                     color: Consts.sentColor, 
                   ),

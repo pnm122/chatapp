@@ -29,194 +29,198 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 400, 
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    isLoginForm ? "Sign in" : "Register",
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: Theme.of(context).colorScheme.onBackground, fontWeight: FontWeight.w700),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  RichText(
-                    text: TextSpan(
-                      text: isLoginForm
-                        ? "Don't have an account already? "
-                        : "Already have an account? ",
-                      style: TextStyle(color: Colors.grey[700]),
-                      children: [
-                        TextSpan(
-                          text: isLoginForm ? "Register" : "Sign in",
-                          style: TextStyle(color: Theme.of(context).colorScheme.primary),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              setState(() {
-                                isLoginForm = !isLoginForm;
-                              });
-                            }
-                        ),
-                      ]
+      body: Container(
+        color: Consts.foregroundColor,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 400, 
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      isLoginForm ? "Sign in" : "Register",
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(color: Theme.of(context).colorScheme.onBackground, fontWeight: FontWeight.w700),
                     ),
-                  ),
 
-                  const SizedBox(height: 24.0),
+                    const SizedBox(height: 4),
 
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      children: <Widget>[
-                        // E-mail field
-                        TextFormField(
-                          onSaved: (value) { userEmail = value!; },
-                          validator: (value) {
-                            if(value == null || 
-                            !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-                            .hasMatch(value)) {
-                              return "Please enter a valid email address";
-                            }
-                          },
-                          decoration: const InputDecoration(
-                            labelText: "Email",
-                            border: UnderlineInputBorder(
-                              borderSide: BorderSide.none,
-                              borderRadius: BorderRadius.all(Radius.circular(5)),
-                            ),
-                            filled: true,
-                            fillColor: Consts.inputBackgroundColor,
-                            contentPadding: Consts.inputPadding,
-                          ),
-                        ),
-
-                        const SizedBox(height:12.0),
-                        // Password field
-                        TextFormField(
-                          onSaved: (value) { userPass = value!; },
-                          validator: (value) {
-                            if(value == null || value.length < 8) {
-                              return "Password must be at least 8 characters long";
-                            }
-                          },
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: "Password",
-                            border: UnderlineInputBorder(
-                              borderSide: BorderSide.none,
-                              borderRadius: BorderRadius.all(Radius.circular(5)),
-                            ),
-                            filled: true,
-                            fillColor: Consts.inputBackgroundColor,
-                            contentPadding: Consts.inputPadding,
-                          ),
-                        ),
-
-                        const SizedBox(height:12.0),
-
-                        isLoginForm ? Container() : TextFormField(
-                          validator: (value) {
-                            if(value == null || value != userPass) {
-                              return "Passwords must match";
-                            }
-                          },
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: "Confirm password",
-                            border: UnderlineInputBorder(
-                              borderSide: BorderSide.none,
-                              borderRadius: BorderRadius.all(Radius.circular(5)),
-                            ),
-                            filled: true,
-                            fillColor: Consts.inputBackgroundColor,
-                            contentPadding: Consts.inputPadding,
-                          ),
-                        ),
-
-                        const SizedBox(height:24.0),
-                        
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(50),
-                          ),
-                          onPressed: () async {
-                            _formKey.currentState!.save();
-                            if(_formKey.currentState!.validate()) {
-                              // Use the same authservice provider for all authentication purposes!
-                              var provider = Provider.of<AuthService>(context, listen: false);
-                              bool creating = false;
-                              var error;
-
-                              isLoginForm ? await provider.signInWithEmailAndPass(userEmail, userPass).then((result) {
-                                error = result;
-                              }) : await provider.createAccountWithEmailAndPass(userEmail, userPass).then((result) {
-                                error = result;
-                                creating = true;
-                              });
-
-                              // No error => add user to the database
-                              // Error => display error
-                              if(error == null) {
-                                if(creating) { DatabaseService().createUser(provider.user!); } 
-                                else { DatabaseService().signIn(); }
-                                HelperFunctions.saveUserID(provider.user!.user!.uid);
-                              } else {
-                                showError(error);
+                    RichText(
+                      text: TextSpan(
+                        text: isLoginForm
+                          ? "Don't have an account already? "
+                          : "Already have an account? ",
+                        style: TextStyle(color: Colors.grey[700]),
+                        children: [
+                          TextSpan(
+                            text: isLoginForm ? "Register" : "Sign in",
+                            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                setState(() {
+                                  isLoginForm = !isLoginForm;
+                                });
                               }
-                            }
-                          },
-                          child: Text(isLoginForm ? "Sign in" : "Register"),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                    child: Row(
-                      children: const <Widget>[
-                        Expanded(child: Divider()),
-                        SizedBox(width: 5.0),
-                        Text("OR"),
-                        SizedBox(width: 5.0),
-                        Expanded(child: Divider()),
-                      ],
-                    ),
-                  ),
-
-                  // Google sign in button
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      final provider = Provider.of<AuthService>(context, listen: false);
-                      await provider.signInWithGoogle().then((error) {
-                        if(error == null) {
-                          print(provider.user!.additionalUserInfo!.isNewUser);
-                          if(provider.user!.additionalUserInfo!.isNewUser) { DatabaseService().createUser(provider.user!); } 
-                          else { DatabaseService().signIn(); }
-                          HelperFunctions.saveUserID(provider.user!.user!.uid);
-                        } else {
-                          showError(error.toString());
-                        }
-                      });
-                    },
-
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
-                      backgroundColor: const Color(0xFF397AF3),
+                          ),
+                        ]
+                      ),
                     ),
 
-                    icon: const FaIcon(FontAwesomeIcons.google),
-                    label: Text(isLoginForm ? "Sign in with Google" : "Register with Google"),
+                    const SizedBox(height: 24.0),
 
-                  ),
-                ],
-              )
-            ),
-          ],
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: <Widget>[
+                          // E-mail field
+                          TextFormField(
+                            onSaved: (value) { userEmail = value!; },
+                            validator: (value) {
+                              if(value == null || 
+                              !RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                              .hasMatch(value)) {
+                                return "Please enter a valid email address";
+                              }
+                            },
+                            keyboardType: TextInputType.emailAddress, // Request e-mail-specific keyboard!
+                            decoration: const InputDecoration(
+                              labelText: "Email",
+                              border: UnderlineInputBorder(
+                                borderSide: BorderSide.none,
+                                borderRadius: BorderRadius.all(Radius.circular(5)),
+                              ),
+                              filled: true,
+                              fillColor: Consts.inputBackgroundColor,
+                              contentPadding: Consts.inputPadding,
+                            ),
+                          ),
+
+                          const SizedBox(height:12.0),
+                          // Password field
+                          TextFormField(
+                            onSaved: (value) { userPass = value!; },
+                            validator: (value) {
+                              if(value == null || value.length < 8) {
+                                return "Password must be at least 8 characters long";
+                              }
+                            },
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              labelText: "Password",
+                              border: UnderlineInputBorder(
+                                borderSide: BorderSide.none,
+                                borderRadius: BorderRadius.all(Radius.circular(5)),
+                              ),
+                              filled: true,
+                              fillColor: Consts.inputBackgroundColor,
+                              contentPadding: Consts.inputPadding,
+                            ),
+                          ),
+
+                          const SizedBox(height:12.0),
+
+                          isLoginForm ? Container() : TextFormField(
+                            validator: (value) {
+                              if(value == null || value != userPass) {
+                                return "Passwords must match";
+                              }
+                            },
+                            obscureText: true,
+                            decoration: const InputDecoration(
+                              labelText: "Confirm password",
+                              border: UnderlineInputBorder(
+                                borderSide: BorderSide.none,
+                                borderRadius: BorderRadius.all(Radius.circular(5)),
+                              ),
+                              filled: true,
+                              fillColor: Consts.inputBackgroundColor,
+                              contentPadding: Consts.inputPadding,
+                            ),
+                          ),
+
+                          const SizedBox(height:24.0),
+                          
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(50),
+                            ),
+                            onPressed: () async {
+                              _formKey.currentState!.save();
+                              if(_formKey.currentState!.validate()) {
+                                // Use the same authservice provider for all authentication purposes!
+                                var provider = Provider.of<AuthService>(context, listen: false);
+                                bool creating = false;
+                                var error;
+
+                                isLoginForm ? await provider.signInWithEmailAndPass(userEmail, userPass).then((result) {
+                                  error = result;
+                                }) : await provider.createAccountWithEmailAndPass(userEmail, userPass).then((result) {
+                                  error = result;
+                                  creating = true;
+                                });
+
+                                // No error => add user to the database
+                                // Error => display error
+                                if(error == null) {
+                                  if(creating) { DatabaseService().createUser(provider.user!); } 
+                                  else { DatabaseService().signIn(); }
+                                  HelperFunctions.saveUserID(provider.user!.user!.uid);
+                                } else {
+                                  showError(error);
+                                }
+                              }
+                            },
+                            child: Text(isLoginForm ? "Sign in" : "Register"),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 12.0),
+                      child: Row(
+                        children: const <Widget>[
+                          Expanded(child: Divider()),
+                          SizedBox(width: 5.0),
+                          Text("OR"),
+                          SizedBox(width: 5.0),
+                          Expanded(child: Divider()),
+                        ],
+                      ),
+                    ),
+
+                    // Google sign in button
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final provider = Provider.of<AuthService>(context, listen: false);
+                        await provider.signInWithGoogle().then((error) {
+                          if(error == null) {
+                            print(provider.user!.additionalUserInfo!.isNewUser);
+                            if(provider.user!.additionalUserInfo!.isNewUser) { DatabaseService().createUser(provider.user!); } 
+                            else { DatabaseService().signIn(); }
+                            HelperFunctions.saveUserID(provider.user!.user!.uid);
+                          } else {
+                            showError(error.toString());
+                          }
+                        });
+                      },
+
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50),
+                        backgroundColor: const Color(0xFF397AF3),
+                      ),
+
+                      icon: const FaIcon(FontAwesomeIcons.google),
+                      label: Text(isLoginForm ? "Sign in with Google" : "Register with Google"),
+
+                    ),
+                  ],
+                )
+              ),
+            ],
+          ),
         ),
       )
     );
