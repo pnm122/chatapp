@@ -62,7 +62,7 @@ class _GroupsState extends State<Groups> {
           actions: [
             Padding(
               padding: Consts.appBarIconPadding,
-              child: const ActionButton(defaultIcon: Icons.add, hoverIcon: Icons.add_circle, popUpWidget: JoinGroupPopUp(), title: "Join Group"),
+              child: const ActionButton(defaultIcon: Icons.group_add_outlined, hoverIcon: Icons.group_add, popUpWidget: JoinGroupPopUp(), title: "Join Group"),
             ),
             Padding(
               padding: Consts.appBarIconPadding,
@@ -402,7 +402,7 @@ class _JoinGroupPopUpState extends State<JoinGroupPopUp> {
           TextFormField(
             textAlign: TextAlign.center,
             controller: _controller,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: Colors.black45),
             decoration: const InputDecoration(
               hintText: "Enter the group ID",
               border: InputBorder.none,
@@ -514,9 +514,10 @@ class _CreateGroupPopUpState extends State<CreateGroupPopUp> {
             ),
           ),
           TextFormField(
+            maxLength: Consts.maxGroupNameLength,
             textAlign: TextAlign.center,
             controller: _controller,
-            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700, color: Colors.black45),
             decoration: const InputDecoration(
               hintText: "Give your group a name...",
               border: InputBorder.none,

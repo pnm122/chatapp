@@ -1,5 +1,5 @@
 import 'package:chatapp/consts.dart';
-import 'package:chatapp/pages/chat_room.dart';
+import 'package:chatapp/pages/chat_page.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/viewmodels/main_view_model.dart';
 import 'package:chatapp/widgets/groups.dart';
@@ -18,8 +18,6 @@ import 'package:provider/provider.dart';
 class MainPage extends StatelessWidget {
   const MainPage({super.key, required this.viewModel});
   final viewModel;
-
-  final groupsPage = const Groups();
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +68,7 @@ class MainPage extends StatelessWidget {
     return Row(
       children: [
         MediaQuery.of(context).size.width > Consts.cutoffWidth
-          ? groupsPage
+          ? const Groups()
           : Container(),
 
         // Use expanded so it doesn't overflow (bc the other row element is a sizedbox)
@@ -81,95 +79,7 @@ class MainPage extends StatelessWidget {
                 Consts.shadow
               ]
             ),
-            child: Scaffold(
-              appBar: CustomAppBar(
-                title: selectedGroupName == "" ? null : Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          selectedGroupName,
-                          style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        Text(
-                          "ID: ${context.read<MainViewModel>().selectedGroupId}",
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.black54),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(width: 4.0),
-
-                    InkWell(
-                      onTap: () {
-                        Clipboard.setData(ClipboardData(text: context.read<MainViewModel>().selectedGroupId))
-                          .then((_) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Copied Group ID to clipboard."),
-                                backgroundColor: Consts.successColor,
-                              )
-                            );
-                          });
-                      },
-                      child: const Icon(Icons.copy, size: 14),
-                    ),
-                  ],
-                ),
-                leading: MediaQuery.of(context).size.width > Consts.cutoffWidth
-                  ? null : IconButton(
-                    icon: const Icon(Icons.groups),
-                    // Using this instead of drawer because Scaffold.of(context).openDrawer() didn't like me for some reason
-                    onPressed: () => Navigator.of(context).push(
-                      PageRouteBuilder(
-                        opaque: false,
-                        // Color behind this route and in front of the one behind
-                        barrierColor: Colors.black38,
-                        barrierDismissible: true,
-                        pageBuilder: ((context, animation, secondaryAnimation) => 
-                          ChangeNotifierProvider<MainViewModel>.value(
-                            value: viewModel, // Pass in the same viewmodel to this new view
-                            child: groupsPage
-                          )
-                        ),
-                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                          const begin = Offset(-1.0, 0);
-                          const end = Offset.zero;
-                          const curve = Curves.ease;
-                          final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                          return SlideTransition(
-                            position: animation.drive(tween),
-                            child: child,
-                          );
-                        },
-                      )
-                    )
-                  ),
-                hasBottom: true,
-                actions: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: Consts.sideMargin),
-                    child: TextButton(
-                      onPressed: () {
-                        DatabaseService().signOut();
-                        Provider.of<AuthService>(context, listen: false).signOut();
-                        pushScreenReplace(context, const LoginPage());
-                      },
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(Colors.transparent),
-                        foregroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.primary),
-                        shadowColor: MaterialStateProperty.all(Colors.transparent), 
-                        padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 0))
-                      ),
-                      child: const Text("Log out"),
-                    ),
-                  ),
-                ]
-              ),
-              body: const ChatRoom(),
-            ),
+            child: ChatPage(viewModel: viewModel),
           ),
         ),
       ],

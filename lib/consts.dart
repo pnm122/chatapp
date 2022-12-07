@@ -9,6 +9,8 @@ class Consts {
 
   static const double sideMargin = 16.0;
 
+  static const int maxGroupNameLength = 30;
+
   static EdgeInsets appBarIconPadding =  const EdgeInsets.symmetric(horizontal: 4.0, vertical: 12.0);
 
   static EdgeInsets messagePadding = const EdgeInsets.all(16.0);

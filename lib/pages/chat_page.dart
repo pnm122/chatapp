@@ -9,6 +9,8 @@ import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/viewmodels/main_view_model.dart';
 import 'package:chatapp/widgets/alert.dart';
+import 'package:chatapp/widgets/custom_app_bar.dart';
+import 'package:chatapp/widgets/groups.dart';
 import 'package:chatapp/widgets/message.dart';
 import 'package:chatapp/widgets/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,16 +18,19 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-class ChatRoom extends StatefulWidget {
-  const ChatRoom({super.key});
+class ChatPage extends StatefulWidget {
+  const ChatPage({super.key, required this.viewModel});
+
+  final viewModel;
 
   @override
-  State<ChatRoom> createState() => _ChatRoomState();
+  State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatRoomState extends State<ChatRoom> {
+class _ChatPageState extends State<ChatPage> {
   AuthService authService = AuthService();
   // List of messages in the database
   // DatabaseService().getMessages() returns a listener to it so it automatically updates and rebuilds widgets when the messages change
@@ -41,6 +46,8 @@ class _ChatRoomState extends State<ChatRoom> {
   int notifs = 0;
   int messagesWhenButtonShown = 0;
 
+  bool editingGroupName = false;
+
   @override
   void dispose() {
     _messageController.dispose();
@@ -50,13 +57,158 @@ class _ChatRoomState extends State<ChatRoom> {
 
   @override
   Widget build(BuildContext context) {
+    String groupName = context.watch<MainViewModel>().selectedGroupName;
     groupID = context.watch<MainViewModel>().selectedGroupId;
     messages = context.watch<MainViewModel>().messages as Stream<QuerySnapshot<Object?>>?;
 
-    return Container(
+    return Scaffold(
+      appBar: CustomAppBar(
+        title: groupName == "" ? null : Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                editingGroupName 
+                  // Wrap with intrinsic width to limit its size to the text being inputted
+                  ? IntrinsicWidth(
+                    child: TextFormField(
+                      initialValue: groupName,
+                      maxLength: Consts.maxGroupNameLength,
+                      onFieldSubmitted: (name) {
+                        if(name.isNotEmpty) {
+                          DatabaseService().renameGroup(groupID, name);
+                          context.read<MainViewModel>().setSelectedGroupName(name);
+                        }
+                        setState(() {
+                          editingGroupName = false;
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        constraints: BoxConstraints(maxWidth: 200),
+                        contentPadding: EdgeInsets.all(6.0),
+                        counterText: "",
+                        isDense: true,
+                        filled: true,
+                        fillColor: Consts.inputBackgroundColor,
+                        border: OutlineInputBorder(
+                          borderSide: BorderSide.none,
+                        )
+                      ),
+                      style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  )
+                  : Text(
+                      groupName,
+                      style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+
+                const SizedBox(width: 4.0),
+
+                Tooltip(
+                  message: editingGroupName ? "Cancel Editing" : "Edit Group Name",
+                  decoration: const BoxDecoration(color: Consts.toolTipColor),
+                  // Use InkWell to get rid of extra padding
+                  child: InkWell(
+                    onTap: () {
+                      // tell UI to change Group Name to a text field to edit the name
+                      setState(() {
+                        editingGroupName = !editingGroupName;
+                      });
+                    },
+                    child: Icon(
+                      editingGroupName ? Icons.close : Icons.create,
+                      size: 20
+                    )
+                  )
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                Text(
+                  "ID: ${context.read<MainViewModel>().selectedGroupId}",
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.black54),
+                ),
+
+                const SizedBox(width: 4.0),
+
+                Tooltip(
+                  message: "Copy to Clipboard",
+                  decoration: const BoxDecoration(color: Consts.toolTipColor),
+                  // Use InkWell to get rid of extra padding
+                  child: InkWell(
+                    onTap: () {
+                      Clipboard.setData(ClipboardData(text: context.read<MainViewModel>().selectedGroupId))
+                        .then((_) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Copied Group ID to clipboard."),
+                              backgroundColor: Consts.successColor,
+                            )
+                          );
+                        });
+                    },
+                    child: const Icon(Icons.copy, size: 14),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        leading: MediaQuery.of(context).size.width > Consts.cutoffWidth
+          ? null : IconButton(
+            icon: const Icon(Icons.groups),
+            // Using this instead of drawer because Scaffold.of(context).openDrawer() didn't like me for some reason
+            onPressed: () => Navigator.of(context).push(
+              PageRouteBuilder(
+                opaque: false,
+                // Color behind this route and in front of the one behind
+                barrierColor: Colors.black38,
+                barrierDismissible: true,
+                pageBuilder: ((context, animation, secondaryAnimation) => 
+                  ChangeNotifierProvider<MainViewModel>.value(
+                    value: widget.viewModel, // Pass in the same viewmodel to this new view
+                    child: const Groups(),
+                  )
+                ),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(-1.0, 0);
+                  const end = Offset.zero;
+                  const curve = Curves.ease;
+                  final tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
+              )
+            )
+          ),
+        hasBottom: true,
+        actions: <Widget>[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: Consts.sideMargin),
+            child: TextButton(
+              onPressed: () {
+                DatabaseService().signOut();
+                Provider.of<AuthService>(context, listen: false).signOut();
+                pushScreenReplace(context, const LoginPage());
+              },
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.transparent),
+                foregroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.primary),
+                shadowColor: MaterialStateProperty.all(Colors.transparent), 
+                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 0))
+              ),
+              child: const Text("Log out"),
+            ),
+          ),
+        ]
+      ),
+      body: Container(
       color: Consts.foregroundColor,
       child: groupID == "" 
-        ? Center(child: Text("Please select a group"))
+        ? const Center(child: Text("Please select a group"))
         : Column(
             children: [
               Expanded(
@@ -77,6 +229,7 @@ class _ChatRoomState extends State<ChatRoom> {
               messageSender(),
             ],
           ),
+      ),
     );
   }
 

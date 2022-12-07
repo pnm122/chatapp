@@ -76,11 +76,6 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: Source Sans Pro
-      fonts:
-        - asset: fonts/SourceSansPro-Regular.ttf
-        - asset: fonts/SourceSansPro-Bold.ttf
-        - asset: fonts/SourceSansPro-Italic.ttf
     - family: Inter
       fonts:
         - asset: fonts/Inter-Bold.ttf

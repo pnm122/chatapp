@@ -65,6 +65,12 @@ class DatabaseService {
     }
   }
 
+  Future renameGroup(String id, String name) async {
+    await groupCollection.doc(id).update({
+      "name": name,
+    });
+  }
+
   Stream<DocumentSnapshot> getCurrentUserInfo() {
     // Use instead of HelperFunctions method to get current user ID?
     String? uid = FirebaseAuth.instance.currentUser!.uid;

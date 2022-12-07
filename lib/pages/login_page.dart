@@ -1,6 +1,6 @@
 import 'package:chatapp/consts.dart';
 import 'package:chatapp/helper/helper_functions.dart';
-import 'package:chatapp/pages/chat_room.dart';
+import 'package:chatapp/pages/chat_page.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/widgets/widgets.dart';

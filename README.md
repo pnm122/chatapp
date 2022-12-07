@@ -15,14 +15,21 @@ A group-based chat application created by Pierce Martin
 * Unify colors
 * Clicking on current group shouldn't reload the messages
 * Get enter key to work
+* Font chosen
+* Group ID copying
+* Move main page appbar code to chats page
+* Group renaming
+* Group name max length
 
 ### To Do
-* Font on mobile browser?
-* Group info page (users and their logged-in status, group ID, other metadata)
+* Username max length
+* Account renaming
+* Group info page (users and their logged-in status, other metadata)
 * Group together messages in similar times
 * Tell when a person is in the browser? Or when they go AFK?
 * Profile pictures & Group pictures
 * Replies (using gestures? :o)
+* Group deleting
 * Attachments
 * Notification bubble on groups icon when a group has new messages?
 * Find a way to constrain the size of groups on small screen size
@@ -35,6 +42,6 @@ A group-based chat application created by Pierce Martin
 * Scroll to bottom on new message is a little buggy? Doesn't always go all the way to the bottom
 * setState() being called after widget destruction in (i think) groups.dart
 * Firebase permissions error on log out, not sure where it's coming from
-* setState() called after dispose when in smaller view
-  
+* (fixed?) setState() called after dispose when in smaller view 
+* Unhandled Google errors
   
