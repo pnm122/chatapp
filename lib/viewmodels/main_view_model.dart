@@ -3,20 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:chatapp/service/database_service.dart';
 
 class MainViewModel with ChangeNotifier {
-  int _selectedIndex = -1;
   String _selectedGroupId = "";
   String _selectedGroupName = "";
   Stream<QuerySnapshot<Object?>>? _messages;
 
-  int get selectedIndex => _selectedIndex;
   String get selectedGroupId => _selectedGroupId;
   String get selectedGroupName => _selectedGroupName;
   Stream? get messages => _messages;
-
-  setSelectedIndex(index) {
-    _selectedIndex = index;
-    notifyListeners();
-  }
 
   setSelectedGroupId(id) {
     _selectedGroupId = id;

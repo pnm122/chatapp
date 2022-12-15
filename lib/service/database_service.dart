@@ -86,6 +86,26 @@ class DatabaseService {
     return groupCollection.doc(groupId).snapshots();
   }
 
+  Stream getUserGroups() {
+    // Get all groups that contain the current user's ID in them, then sort by most recent message
+    // This list updates automatically thanks to snapshots()
+    return groupCollection.snapshots().map((event) {
+      List groups = [];
+      for(var doc in event.docs) {
+        if((doc["members"] as List).contains(FirebaseAuth.instance.currentUser!.uid)) {
+          groups.add(doc);
+        }
+      }
+      // Sort by most recent message
+      // Note: not a stable sort method so groups without messages may rearrange? Not really important practically
+      groups.sort((a, b) {
+        return b["lastMessageTimeStamp"].compareTo(a["lastMessageTimeStamp"]);
+      });
+      return groups;
+    });
+    
+  }
+
   Future setDisplayName(String displayName) async {
     await userCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
       "displayName": displayName,

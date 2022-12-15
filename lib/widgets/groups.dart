@@ -20,33 +20,6 @@ class Groups extends StatefulWidget {
 }
 
 class _GroupsState extends State<Groups> {
-  List groupIDs = List.empty(growable: true);
-  List<Stream> groups = List.empty(growable: true);
-  StreamSubscription? _subscription;
-
-  @override
-  void initState() {
-    _subscription = DatabaseService().getCurrentUserInfo().listen((event) { 
-      if(FirebaseAuth.instance.currentUser == null) { return; } // Avoid setState calls on the user logging out
-
-      setState(() {
-        if(event.data() != null) {
-          groupIDs = (event.data() as Map<String, dynamic>)["groups"];
-        }
-      });
-      groups = List.empty(growable: true);
-      for(var id in groupIDs) {
-        groups.add(DatabaseService().getGroup(id.toString()));
-      }
-    });
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _subscription!.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +44,44 @@ class _GroupsState extends State<Groups> {
             const Padding(padding: EdgeInsets.all(4.0)),
           ]
         ),
-        body: Container(
+        body: StreamBuilder(
+          stream: DatabaseService().getUserGroups(),
+          builder: (context, snapshot) {
+            // Placeholder list of tiles
+            if(snapshot.connectionState == ConnectionState.waiting) {
+              return ListView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  return const GroupTilePlaceholder();
+                },
+              );
+            }
+            if(snapshot.hasData) {
+              return ListView.builder(
+                itemCount: snapshot.data.length,
+                itemBuilder: (context, index) {
+                  return GroupTile(info: snapshot.data[index].data());
+                },
+              );
+            } else {
+              // No groups for this user
+              return Center(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text("You haven't joined any groups yet."),
+                    SizedBox(height: 5.0),
+                    NoGroupsJoinGroupButton(),
+                    SizedBox(height: 5.0),
+                    NoGroupsCreateGroupButton()
+                  ]
+                )
+              );
+            }
+          },
+        ),
+        /* Container(
           color: Consts.backgroundColor,
           // Outer StreamBuilder: list of all group ID's associated with this user
           // Get the group with this ID from the database
@@ -113,6 +123,7 @@ class _GroupsState extends State<Groups> {
               
             ),
         )
+        */
       ),
     );
   }
@@ -206,9 +217,8 @@ class _GroupTilePlaceholderState extends State<GroupTilePlaceholder> with Single
 }
 
 class GroupTile extends StatefulWidget {
-  const GroupTile({super.key, required this.info, required this.index});
+  const GroupTile({super.key, required this.info});
   final Map<String, dynamic> info;
-  final int index;
 
   @override
   State<GroupTile> createState() => _GroupTileState();
@@ -220,13 +230,13 @@ class _GroupTileState extends State<GroupTile> {
   @override
   Widget build(BuildContext context) {
 
-    int selectedIndex = context.watch<MainViewModel>().selectedIndex;
+    String selectedID = context.watch<MainViewModel>().selectedGroupId;
+    bool selected = selectedID == widget.info["id"];
 
     return InkWell(
       onTap: () {
         // Don't need to load a new group page if it's already selected
-        if(widget.index != selectedIndex) {
-          context.read<MainViewModel>().setSelectedIndex(widget.index);
+        if(!selected) {
           context.read<MainViewModel>().setSelectedGroupId(widget.info["id"]);
           context.read<MainViewModel>().setSelectedGroupName(widget.info["name"]);
 
@@ -245,7 +255,7 @@ class _GroupTileState extends State<GroupTile> {
         duration: Consts.animationDuration,
         padding: Consts.groupTilePadding,
         constraints: const BoxConstraints(minHeight: Consts.groupTileHeight),
-        color: widget.index == selectedIndex
+        color: selected
           ? Consts.selectedColor
           : hovering ? Consts.hoverColor : Consts.backgroundColor,
         
@@ -253,12 +263,12 @@ class _GroupTileState extends State<GroupTile> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             CircleAvatar(
-              backgroundColor: widget.index == selectedIndex ? Theme.of(context).colorScheme.primary : Color.fromARGB(44, 0, 0, 0),
+              backgroundColor: selected ? Theme.of(context).colorScheme.primary : Color.fromARGB(44, 0, 0, 0),
               radius: 26,
               child: Text(
                 HelperFunctions.abbreviate(widget.info["name"]),
                 style: Theme.of(context).textTheme.headline6?.copyWith(
-                  color: widget.index == selectedIndex ? Colors.white : Colors.black,
+                  color: selected ? Colors.white : Colors.black,
                 )
               )
             ),
@@ -282,7 +292,7 @@ class _GroupTileState extends State<GroupTile> {
                             overflow: TextOverflow.clip,
                             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w700, 
-                              color: widget.index == selectedIndex ? Theme.of(context).colorScheme.primary : Colors.black,
+                              color: selected ? Theme.of(context).colorScheme.primary : Colors.black,
                             ),
                           ),
                         ),
