@@ -32,7 +32,7 @@ class Message extends StatelessWidget {
                     ? CrossAxisAlignment.end
                     : CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    SelectableText(
                       sender,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Consts.senderColor),
                     ),
@@ -51,7 +51,7 @@ class Message extends StatelessWidget {
                       ),
                       constraints: const BoxConstraints(maxWidth: 350),
                       padding: Consts.messagePadding,
-                      child: Text(
+                      child: SelectableText(
                         message,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: sentByMe
                           ? Consts.sentColor.computeLuminance() > 0.5 ? const Color.fromARGB(193, 0, 0, 0) : Colors.white

@@ -165,7 +165,7 @@ class _LoginPageState extends State<LoginPage> {
                                 // Error => display error
                                 if(error == null) {
                                   if(creating) { DatabaseService().createUser(provider.user!); } 
-                                  else { DatabaseService().signIn(); }
+                                  else { DatabaseService().setActive(); }
                                   HelperFunctions.saveUserID(provider.user!.user!.uid);
                                 } else {
                                   showError(error);
@@ -199,7 +199,7 @@ class _LoginPageState extends State<LoginPage> {
                           if(error == null) {
                             print(provider.user!.additionalUserInfo!.isNewUser);
                             if(provider.user!.additionalUserInfo!.isNewUser) { DatabaseService().createUser(provider.user!); } 
-                            else { DatabaseService().signIn(); }
+                            else { DatabaseService().setActive(); }
                             HelperFunctions.saveUserID(provider.user!.user!.uid);
                           } else {
                             showError(error.toString());

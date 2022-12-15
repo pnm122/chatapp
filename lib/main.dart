@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'consts.dart';
-import 'dart:html' as html;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,27 +23,12 @@ void main() async {
 
   FirebaseAuth.instance.setPersistence(Persistence.SESSION);
 
-  // ANY DATABASE FUNCTIONS REQUIRE US TO BE SIGNED IN FIRST...
-  /*html.window.onUnload.listen((event) async {
-    print("Unload...");
-    await DatabaseService().test();
-  },);*/
-
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  /*getUserLoggedInStatus() async {
-    await HelperFunctions.getUserLoggedInStatus().then((value) {
-      if(value != null) {
-        setState(() {
-          _isLoggedIn = value;
-        });
-      }
-    });
-  }*/
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(

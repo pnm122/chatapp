@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chatapp/consts.dart';
 import 'package:chatapp/pages/chat_page.dart';
 import 'package:chatapp/service/database_service.dart';
@@ -15,12 +17,27 @@ import 'package:chatapp/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'dart:html' as html;
+
 class MainPage extends StatelessWidget {
   const MainPage({super.key, required this.viewModel});
   final viewModel;
 
   @override
   Widget build(BuildContext context) {
+    // Set active state of user depending on the window state
+    // Put this inside MainPage since the user is guaranteed to be logged in here
+    html.window.onBeforeUnload.listen((event) async {
+      await DatabaseService().setInactive();
+    });
+    html.window.onBlur.listen((event) async {
+      await DatabaseService().setInactive();
+    });
+    html.window.onFocus.listen((event) async {
+      await DatabaseService().setActive();
+    });
+
+
     var provider = Provider.of<AuthService>(context, listen: false);
 
     var selectedGroupName = context.watch<MainViewModel>().selectedGroupName;
@@ -74,7 +91,7 @@ class MainPage extends StatelessWidget {
         // Use expanded so it doesn't overflow (bc the other row element is a sizedbox)
         Expanded(
           child: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               boxShadow: [
                 Consts.shadow
               ]

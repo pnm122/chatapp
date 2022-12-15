@@ -190,7 +190,7 @@ class _ChatPageState extends State<ChatPage> {
             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: Consts.sideMargin),
             child: TextButton(
               onPressed: () {
-                DatabaseService().signOut();
+                DatabaseService().setInactive();
                 Provider.of<AuthService>(context, listen: false).signOut();
                 pushScreenReplace(context, const LoginPage());
               },

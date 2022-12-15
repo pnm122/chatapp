@@ -92,15 +92,15 @@ class DatabaseService {
     });
   }
 
-  signIn() async {
+  Future setInactive() async {
     await userCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
-      "isLoggedIn": true,
+      "active": false,
     });
   }
 
-  signOut() async {
+  Future setActive() async {
     await userCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
-      "isLoggedIn": false,
+      "active": true,
     });
   }
 
