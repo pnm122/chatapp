@@ -5,20 +5,27 @@ import 'package:chatapp/service/database_service.dart';
 class MainViewModel with ChangeNotifier {
   String _selectedGroupId = "";
   String _selectedGroupName = "";
+  List _selectedGroupMembers = [];
   Stream<QuerySnapshot<Object?>>? _messages;
 
   String get selectedGroupId => _selectedGroupId;
   String get selectedGroupName => _selectedGroupName;
+  List get selectedGroupMembers => _selectedGroupMembers;
   Stream? get messages => _messages;
 
-  setSelectedGroupId(id) {
+  set selectedGroupId(id) {
     _selectedGroupId = id;
     _messages = DatabaseService().getMessages(_selectedGroupId);
     notifyListeners();
   }
 
-  setSelectedGroupName(name) {
+  set selectedGroupName(name) {
     _selectedGroupName = name;
+    notifyListeners();
+  }
+
+  set selectedGroupMembers(members) {
+    _selectedGroupMembers = members;
     notifyListeners();
   }
 }

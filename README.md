@@ -20,13 +20,14 @@ A group-based chat application created by Pierce Martin
 * Move main page appbar code to chats page
 * Group renaming
 * Group name max length
+* Tell when a person is in the browser? Or when they go AFK?
+* Show which users are active/not on the chat page
 
 ### To Do
 * Username max length
 * Account renaming
 * Group info page (users and their logged-in status, other metadata)
 * Group together messages in similar times
-* Tell when a person is in the browser? Or when they go AFK?
 * Profile pictures & Group pictures
 * Replies (using gestures? :o)
 * Group deleting
@@ -38,6 +39,7 @@ A group-based chat application created by Pierce Martin
 * Allow for deleting groups potentially
 
 ### Known issues
+* Group name overflows if long enough on the right screen size
 * AuthStateChanges not updating for some reason after signing out
 * Scroll to bottom on new message is a little buggy? Doesn't always go all the way to the bottom
 * setState() being called after widget destruction in (i think) groups.dart

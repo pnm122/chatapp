@@ -57,6 +57,21 @@ class _GroupsState extends State<Groups> {
               );
             }
             if(snapshot.hasData) {
+              if(snapshot.data.length == 0) {
+                return Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Text("You haven't joined any groups yet."),
+                      SizedBox(height: 5.0),
+                      NoGroupsJoinGroupButton(),
+                      SizedBox(height: 5.0),
+                      NoGroupsCreateGroupButton()
+                    ]
+                  )
+                );
+              }
               return ListView.builder(
                 itemCount: snapshot.data.length,
                 itemBuilder: (context, index) {
@@ -237,8 +252,9 @@ class _GroupTileState extends State<GroupTile> {
       onTap: () {
         // Don't need to load a new group page if it's already selected
         if(!selected) {
-          context.read<MainViewModel>().setSelectedGroupId(widget.info["id"]);
-          context.read<MainViewModel>().setSelectedGroupName(widget.info["name"]);
+          context.read<MainViewModel>().selectedGroupId = widget.info["id"];
+          context.read<MainViewModel>().selectedGroupName = widget.info["name"];
+          context.read<MainViewModel>().selectedGroupMembers = widget.info["members"];
 
           // For when the groups page appears via button
           if(MediaQuery.of(context).size.width <= Consts.cutoffWidth) {

@@ -63,96 +63,121 @@ class _ChatPageState extends State<ChatPage> {
 
     return Scaffold(
       appBar: CustomAppBar(
-        title: groupName == "" ? null : Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: groupName == "" ? null : Row(
           children: [
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                editingGroupName 
-                  // Wrap with intrinsic width to limit its size to the text being inputted
-                  ? IntrinsicWidth(
-                    child: TextFormField(
-                      initialValue: groupName,
-                      maxLength: Consts.maxGroupNameLength,
-                      onFieldSubmitted: (name) {
-                        if(name.isNotEmpty) {
-                          DatabaseService().renameGroup(groupID, name);
-                          context.read<MainViewModel>().setSelectedGroupName(name);
-                        }
-                        setState(() {
-                          editingGroupName = false;
-                        });
-                      },
-                      decoration: const InputDecoration(
-                        constraints: BoxConstraints(maxWidth: 200),
-                        contentPadding: EdgeInsets.all(6.0),
-                        counterText: "",
-                        isDense: true,
-                        filled: true,
-                        fillColor: Consts.inputBackgroundColor,
-                        border: OutlineInputBorder(
-                          borderSide: BorderSide.none,
-                        )
-                      ),
-                      style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                  )
-                  : Text(
-                      groupName,
-                      style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-
-                const SizedBox(width: 4.0),
-
-                Tooltip(
-                  message: editingGroupName ? "Cancel Editing" : "Edit Group Name",
-                  decoration: const BoxDecoration(color: Consts.toolTipColor),
-                  // Use InkWell to get rid of extra padding
-                  child: InkWell(
-                    onTap: () {
-                      // tell UI to change Group Name to a text field to edit the name
-                      setState(() {
-                        editingGroupName = !editingGroupName;
-                      });
-                    },
-                    child: Icon(
-                      editingGroupName ? Icons.close : Icons.create,
-                      size: 20
-                    )
-                  )
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Text(
-                  "ID: ${context.read<MainViewModel>().selectedGroupId}",
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.black54),
-                ),
-
-                const SizedBox(width: 4.0),
-
-                Tooltip(
-                  message: "Copy to Clipboard",
-                  decoration: const BoxDecoration(color: Consts.toolTipColor),
-                  // Use InkWell to get rid of extra padding
-                  child: InkWell(
-                    onTap: () {
-                      Clipboard.setData(ClipboardData(text: context.read<MainViewModel>().selectedGroupId))
-                        .then((_) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Copied Group ID to clipboard."),
-                              backgroundColor: Consts.successColor,
+                Row(
+                  children: [
+                    editingGroupName 
+                      // Wrap with intrinsic width to limit its size to the text being inputted
+                      ? IntrinsicWidth(
+                        child: TextFormField(
+                          initialValue: groupName,
+                          maxLength: Consts.maxGroupNameLength,
+                          onFieldSubmitted: (name) {
+                            if(name.isNotEmpty) {
+                              DatabaseService().renameGroup(groupID, name);
+                              context.read<MainViewModel>().selectedGroupName = name;
+                            }
+                            setState(() {
+                              editingGroupName = false;
+                            });
+                          },
+                          decoration: const InputDecoration(
+                            constraints: BoxConstraints(maxWidth: 200),
+                            contentPadding: EdgeInsets.all(6.0),
+                            counterText: "",
+                            isDense: true,
+                            filled: true,
+                            fillColor: Consts.inputBackgroundColor,
+                            border: OutlineInputBorder(
+                              borderSide: BorderSide.none,
                             )
-                          );
-                        });
-                    },
-                    child: const Icon(Icons.copy, size: 14),
-                  ),
+                          ),
+                          style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                      )
+                      : Text(
+                          groupName,
+                          style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+
+                    const SizedBox(width: 4.0),
+
+                    Tooltip(
+                      message: editingGroupName ? "Cancel Editing" : "Edit Group Name",
+                      decoration: const BoxDecoration(color: Consts.toolTipColor),
+                      // Use InkWell to get rid of extra padding
+                      child: InkWell(
+                        onTap: () {
+                          // tell UI to change Group Name to a text field to edit the name
+                          setState(() {
+                            editingGroupName = !editingGroupName;
+                          });
+                        },
+                        child: Icon(
+                          editingGroupName ? Icons.close : Icons.create,
+                          size: 20
+                        )
+                      )
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Text(
+                      "ID: ${context.read<MainViewModel>().selectedGroupId}",
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.black54),
+                    ),
+
+                    const SizedBox(width: 4.0),
+
+                    Tooltip(
+                      message: "Copy to Clipboard",
+                      decoration: const BoxDecoration(color: Consts.toolTipColor),
+                      // Use InkWell to get rid of extra padding
+                      child: InkWell(
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: context.read<MainViewModel>().selectedGroupId))
+                            .then((_) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Copied Group ID to clipboard."),
+                                  backgroundColor: Consts.successColor,
+                                )
+                              );
+                            });
+                        },
+                        child: const Icon(Icons.copy, size: 14),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
+            Expanded(
+              child: StreamBuilder(
+                stream: DatabaseService().getGroupUsers(context.read<MainViewModel>().selectedGroupId),
+                builder: (context, snapshot) {
+                  if(snapshot.hasData) {
+                    return Container(
+                      // Constraints = size of UserBubble
+                      // Should be a temporary fix but I really don't know how to fix the userbubble expanding to height otherwise
+                      constraints: const BoxConstraints(maxHeight: 56),
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: snapshot.data.length,
+                        itemBuilder: (context, index) {
+                          return UserBubble(userData: snapshot.data[index].data());
+                        }
+                      ),
+                    );
+                  } else { return Container(); }
+                },
+              ),
+            )
           ],
         ),
         leading: MediaQuery.of(context).size.width > Consts.cutoffWidth

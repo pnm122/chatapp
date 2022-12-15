@@ -86,6 +86,18 @@ class DatabaseService {
     return groupCollection.doc(groupId).snapshots();
   }
 
+  Stream getGroupUsers(String groupId) {
+    return userCollection.snapshots().map((event) {
+      List users = [];
+      for(var doc in event.docs) {
+        if((doc["groups"] as List).contains(groupId)) {
+          users.add(doc);
+        }
+      }
+      return users;
+    });
+  }
+
   Stream getUserGroups() {
     // Get all groups that contain the current user's ID in them, then sort by most recent message
     // This list updates automatically thanks to snapshots()

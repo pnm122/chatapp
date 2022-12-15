@@ -1,4 +1,5 @@
 import 'package:chatapp/consts.dart';
+import 'package:chatapp/helper/helper_functions.dart';
 import 'package:flutter/material.dart';
 
 void pushScreen(context, page) {
@@ -131,6 +132,55 @@ class _ShimmerPlaceholderState extends State<ShimmerPlaceholder> with SingleTick
               ? const BorderRadius.all(Radius.circular(99))
               : const BorderRadius.all(Radius.circular(4.0)),
         ),
+    );
+  }
+}
+
+class UserBubble extends StatelessWidget {
+  const UserBubble({super.key, required this.userData});
+  final Map userData;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: userData["displayName"],
+      decoration: const BoxDecoration(
+        color: Consts.toolTipColor,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        child: Stack(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(99),
+                color: Colors.grey.shade300,
+              ),
+              child: Center(
+                child: Text(
+                  HelperFunctions.abbreviate(userData["displayName"]),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)
+                ),
+              )
+            ),
+            // Active/Inactive bubble
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(99),
+                  color: userData["active"] ? Colors.green.shade300 : Colors.red,
+                ),
+              )
+            )
+          ],
+        ),
+      )
     );
   }
 }

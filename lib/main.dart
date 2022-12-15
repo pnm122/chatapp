@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
             onBackground: Colors.black,
             brightness: Brightness.light
           ),
-          scaffoldBackgroundColor: const Color.fromARGB(255, 250, 246, 244),
+          scaffoldBackgroundColor: Consts.backgroundColor
         ),
         home: MainWrapper(),
       ),
