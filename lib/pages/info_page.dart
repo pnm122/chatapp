@@ -42,70 +42,69 @@ class _InfoPageState extends State<InfoPage> {
       width: 300,
       child: Scaffold(
         appBar: CustomAppBar(
-          title: displayName != "" ? Column(
+          title: userCreatedTime != -1 ? Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  editingDisplayName 
-                    // Wrap with intrinsic width to limit its size to the text being inputted
-                    ? IntrinsicWidth(
-                      child: TextFormField(
-                        initialValue: displayName,
-                        maxLength: Consts.maxGroupNameLength,
-                        onFieldSubmitted: (name) {
-                          if(name.isNotEmpty) {
-                            DatabaseService().setDisplayName(name);
-                            setState(() {
-                              editingDisplayName = false;
-                            });
-                          }
-                        },
-                        decoration: const InputDecoration(
-                          constraints: BoxConstraints(maxWidth: 220),
-                          contentPadding: EdgeInsets.all(6.0),
-                          counterText: "",
-                          isDense: true,
-                          filled: true,
-                          fillColor: Consts.inputBackgroundColor,
-                          border: OutlineInputBorder(
-                            borderSide: BorderSide.none,
-                          )
-                        ),
-                        style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                    )
-                    // Allow the group name to be scrolled
-                    : Container(
-                      constraints: const BoxConstraints(maxWidth: 200),
+                  Expanded(
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Text(
-                            displayName,
-                            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
-                          ),
+                        child: Row(
+                          children: [
+                            editingDisplayName 
+                            ? IntrinsicWidth(
+                              child: TextFormField(
+                                initialValue: displayName,
+                                maxLength: Consts.maxDisplayNameLength,
+                                onFieldSubmitted: (name) {
+                                  if(name.isNotEmpty) {
+                                    DatabaseService().setDisplayName(name);
+                                    setState(() {
+                                      editingDisplayName = false;
+                                    });
+                                  }
+                                },
+                                decoration: const InputDecoration(
+                                  contentPadding: EdgeInsets.all(6.0),
+                                  counterText: "",
+                                  isDense: true,
+                                  filled: true,
+                                  fillColor: Consts.inputBackgroundColor,
+                                  border: OutlineInputBorder(
+                                    borderSide: BorderSide.none,
+                                  )
+                                ),
+                                style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                            )
+                            // Allow the group name to be scrolled
+                            : Text(
+                              displayName,
+                              style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(width: 4.0),
+                            Tooltip(
+                              message: editingDisplayName ? "Cancel Editing" : "Edit Display Name",
+                              decoration: const BoxDecoration(color: Consts.toolTipColor),
+                              // Use InkWell to get rid of extra padding
+                              child: InkWell(
+                                onTap: () {
+                                  // tell UI to change Group Name to a text field to edit the name
+                                  setState(() {
+                                    editingDisplayName = !editingDisplayName;
+                                  });
+                                },
+                                child: Icon(
+                                  editingDisplayName ? Icons.close : Icons.create,
+                                  size: 20
+                                )
+                              )
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-    
-                  const SizedBox(width: 4.0),
-    
-                  Tooltip(
-                    message: editingDisplayName ? "Cancel Editing" : "Edit Display Name",
-                    decoration: const BoxDecoration(color: Consts.toolTipColor),
-                    // Use InkWell to get rid of extra padding
-                    child: InkWell(
-                      onTap: () {
-                        // tell UI to change Group Name to a text field to edit the name
-                        setState(() {
-                          editingDisplayName = !editingDisplayName;
-                        });
-                      },
-                      child: Icon(
-                        editingDisplayName ? Icons.close : Icons.create,
-                        size: 20
-                      )
-                    )
-                  ),
                 ],
               ),
               Text(

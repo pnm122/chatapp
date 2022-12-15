@@ -22,12 +22,11 @@ A group-based chat application created by Pierce Martin
 * Group name max length
 * Tell when a person is in the browser? Or when they go AFK?
 * Show which users are active/not on the chat page
+* Account renaming
 
 ### To Do
 * Version info page
 * Username max length
-* Account renaming
-* Group info page (users and their logged-in status, other metadata)
 * Group together messages in similar times
 * Profile pictures & Group pictures
 * Replies (using gestures? :o)
