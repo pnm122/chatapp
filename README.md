@@ -24,6 +24,7 @@ A group-based chat application created by Pierce Martin
 * Show which users are active/not on the chat page
 
 ### To Do
+* Version info page
 * Username max length
 * Account renaming
 * Group info page (users and their logged-in status, other metadata)
@@ -31,12 +32,12 @@ A group-based chat application created by Pierce Martin
 * Profile pictures & Group pictures
 * Replies (using gestures? :o)
 * Group deleting
+* Pin messages
 * Attachments
 * Notification bubble on groups icon when a group has new messages?
 * Find a way to constrain the size of groups on small screen size
 * Dark mode switiching support
 * Notification alert
-* Allow for deleting groups potentially
 
 ### Known issues
 * Group name overflows if long enough on the right screen size

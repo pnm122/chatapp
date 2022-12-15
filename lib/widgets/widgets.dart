@@ -174,7 +174,7 @@ class UserBubble extends StatelessWidget {
                 height: 10,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(99),
-                  color: userData["active"] ? Colors.green.shade300 : Colors.red,
+                  color: userData["active"] ? const Color.fromARGB(255, 38, 208, 44) : Colors.grey,
                 ),
               )
             )

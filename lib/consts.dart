@@ -22,8 +22,8 @@ class Consts {
   static const Color backgroundColor = Color.fromARGB(255, 249, 249, 249); // i.e. chat background
   static const Color foregroundColor = Color.fromARGB(255, 255, 255, 255); // i.e. groups background
   static const Color toolTipColor = Color.fromARGB(255, 73, 73, 73);
-  static const Color hoverColor = Color.fromARGB(255, 241, 241, 241);
-  static const Color selectedColor = foregroundColor;
+  static const Color hoverColor = Color.fromARGB(255, 242, 242, 242);
+  static const Color selectedColor = Color.fromARGB(255, 248, 248, 248);
   static const Color successColor = Color(0xFF44CC44);
 
   static const Color sentColor = Color.fromARGB(255, 56, 141, 99);
@@ -39,6 +39,4 @@ class Consts {
   static const double cutoffWidth = 700.0;
 
   static const Duration animationDuration = Duration(milliseconds: 200);
-
-  static const BoxShadow shadow = BoxShadow(color: Color.fromARGB(24, 23, 27, 24), blurRadius: 12.0);
 }

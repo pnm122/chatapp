@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:chatapp/consts.dart';
 import 'package:chatapp/pages/chat_page.dart';
+import 'package:chatapp/pages/info_page.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/viewmodels/main_view_model.dart';
 import 'package:chatapp/widgets/groups.dart';
@@ -85,19 +86,12 @@ class MainPage extends StatelessWidget {
     return Row(
       children: [
         MediaQuery.of(context).size.width > Consts.cutoffWidth
-          ? const Groups()
+          ? const InfoPage()
           : Container(),
 
         // Use expanded so it doesn't overflow (bc the other row element is a sizedbox)
         Expanded(
-          child: Container(
-            decoration: const BoxDecoration(
-              boxShadow: [
-                Consts.shadow
-              ]
-            ),
-            child: ChatPage(viewModel: viewModel),
-          ),
+          child: ChatPage(viewModel: viewModel),
         ),
       ],
     );

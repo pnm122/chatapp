@@ -51,7 +51,9 @@ class MyApp extends StatelessWidget {
             onBackground: Colors.black,
             brightness: Brightness.light
           ),
-          scaffoldBackgroundColor: Consts.backgroundColor
+          scaffoldBackgroundColor: Consts.backgroundColor,
+          textSelectionTheme: const TextSelectionThemeData(cursorColor: Colors.black, selectionColor: Color.fromARGB(152, 142, 193, 255)),
+          dividerColor: Colors.grey.shade100,
         ),
         home: MainWrapper(),
       ),

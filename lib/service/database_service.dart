@@ -19,7 +19,8 @@ class DatabaseService {
   Future createUser(UserCredential user) async {
     await userCollection.doc(user.user?.uid).set({
       "displayName": "",
-      "isLoggedIn": true,
+      "createdTime": DateTime.now().millisecondsSinceEpoch,
+      "active": true,
       "groups": [],
     });
   }

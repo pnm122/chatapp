@@ -4,6 +4,7 @@ import 'dart:html';
 import 'package:badges/badges.dart';
 import 'package:chatapp/consts.dart';
 import 'package:chatapp/helper/helper_functions.dart';
+import 'package:chatapp/pages/info_page.dart';
 import 'package:chatapp/pages/login_page.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/service/database_service.dart';
@@ -63,99 +64,104 @@ class _ChatPageState extends State<ChatPage> {
 
     return Scaffold(
       appBar: CustomAppBar(
+        backgroundColor: Consts.backgroundColor,
         title: groupName == "" ? null : Row(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    editingGroupName 
-                      // Wrap with intrinsic width to limit its size to the text being inputted
-                      ? IntrinsicWidth(
-                        child: TextFormField(
-                          initialValue: groupName,
-                          maxLength: Consts.maxGroupNameLength,
-                          onFieldSubmitted: (name) {
-                            if(name.isNotEmpty) {
-                              DatabaseService().renameGroup(groupID, name);
-                              context.read<MainViewModel>().selectedGroupName = name;
-                            }
-                            setState(() {
-                              editingGroupName = false;
-                            });
-                          },
-                          decoration: const InputDecoration(
-                            constraints: BoxConstraints(maxWidth: 200),
-                            contentPadding: EdgeInsets.all(6.0),
-                            counterText: "",
-                            isDense: true,
-                            filled: true,
-                            fillColor: Consts.inputBackgroundColor,
-                            border: OutlineInputBorder(
-                              borderSide: BorderSide.none,
-                            )
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      editingGroupName 
+                        // Wrap with intrinsic width to limit its size to the text being inputted
+                        ? IntrinsicWidth(
+                          child: TextFormField(
+                            initialValue: groupName,
+                            maxLength: Consts.maxGroupNameLength,
+                            onFieldSubmitted: (name) {
+                              if(name.isNotEmpty) {
+                                DatabaseService().renameGroup(groupID, name);
+                                context.read<MainViewModel>().selectedGroupName = name;
+                              }
+                              setState(() {
+                                editingGroupName = false;
+                              });
+                            },
+                            decoration: const InputDecoration(
+                              //constraints: BoxConstraints(maxWidth: 280),
+                              contentPadding: EdgeInsets.all(6.0),
+                              counterText: "",
+                              isDense: true,
+                              filled: true,
+                              fillColor: Consts.inputBackgroundColor,
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide.none,
+                              )
+                            ),
+                            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
                           ),
-                          style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                      )
-                      : Text(
+                        )
+                        // Allow the group name to be scrolled
+                        : Text(
                           groupName,
                           style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
                         ),
-
-                    const SizedBox(width: 4.0),
-
-                    Tooltip(
-                      message: editingGroupName ? "Cancel Editing" : "Edit Group Name",
-                      decoration: const BoxDecoration(color: Consts.toolTipColor),
-                      // Use InkWell to get rid of extra padding
-                      child: InkWell(
-                        onTap: () {
-                          // tell UI to change Group Name to a text field to edit the name
-                          setState(() {
-                            editingGroupName = !editingGroupName;
-                          });
-                        },
-                        child: Icon(
-                          editingGroupName ? Icons.close : Icons.create,
-                          size: 20
-                        )
-                      )
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Text(
-                      "ID: ${context.read<MainViewModel>().selectedGroupId}",
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.black54),
-                    ),
-
-                    const SizedBox(width: 4.0),
-
-                    Tooltip(
-                      message: "Copy to Clipboard",
-                      decoration: const BoxDecoration(color: Consts.toolTipColor),
-                      // Use InkWell to get rid of extra padding
-                      child: InkWell(
-                        onTap: () {
-                          Clipboard.setData(ClipboardData(text: context.read<MainViewModel>().selectedGroupId))
-                            .then((_) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Copied Group ID to clipboard."),
-                                  backgroundColor: Consts.successColor,
-                                )
-                              );
+                        
+                      const SizedBox(width: 4.0),
+                        
+                      Tooltip(
+                        message: editingGroupName ? "Cancel Editing" : "Edit Group Name",
+                        decoration: const BoxDecoration(color: Consts.toolTipColor),
+                        // Use InkWell to get rid of extra padding
+                        child: InkWell(
+                          onTap: () {
+                            // tell UI to change Group Name to a text field to edit the name
+                            setState(() {
+                              editingGroupName = !editingGroupName;
                             });
-                        },
-                        child: const Icon(Icons.copy, size: 14),
+                          },
+                          child: Icon(
+                            editingGroupName ? Icons.close : Icons.create,
+                            size: 20
+                          )
+                        )
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        "ID: ${context.read<MainViewModel>().selectedGroupId}",
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.black54),
+                      ),
+                        
+                      const SizedBox(width: 4.0),
+                        
+                      Tooltip(
+                        message: "Copy to Clipboard",
+                        decoration: const BoxDecoration(color: Consts.toolTipColor),
+                        // Use InkWell to get rid of extra padding
+                        child: InkWell(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: context.read<MainViewModel>().selectedGroupId))
+                              .then((_) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Copied Group ID to clipboard."),
+                                    backgroundColor: Consts.successColor,
+                                  )
+                                );
+                              });
+                          },
+                          child: const Icon(Icons.copy, size: 14),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             Expanded(
               child: StreamBuilder(
@@ -193,7 +199,7 @@ class _ChatPageState extends State<ChatPage> {
                 pageBuilder: ((context, animation, secondaryAnimation) => 
                   ChangeNotifierProvider<MainViewModel>.value(
                     value: widget.viewModel, // Pass in the same viewmodel to this new view
-                    child: const Groups(),
+                    child: const InfoPage(),
                   )
                 ),
                 transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -210,50 +216,18 @@ class _ChatPageState extends State<ChatPage> {
             )
           ),
         hasBottom: true,
-        actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: Consts.sideMargin),
-            child: TextButton(
-              onPressed: () {
-                DatabaseService().setInactive();
-                Provider.of<AuthService>(context, listen: false).signOut();
-                pushScreenReplace(context, const LoginPage());
-              },
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all(Colors.transparent),
-                foregroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.primary),
-                shadowColor: MaterialStateProperty.all(Colors.transparent), 
-                padding: MaterialStateProperty.all(const EdgeInsets.symmetric(horizontal: 0))
-              ),
-              child: const Text("Log out"),
-            ),
-          ),
-        ]
       ),
       body: Container(
-      color: Consts.foregroundColor,
+      color: Consts.backgroundColor,
       child: groupID == "" 
         ? const Center(child: Text("Please select a group"))
-        : Column(
-            children: [
-              Expanded(
-                child: Stack(
-                  children: [
-                    chatMessages(),
-                    Container(
-                      padding: const EdgeInsets.only(bottom: 8.0),
-                      alignment: Alignment.bottomCenter,
-                      key: ValueKey<bool>(showScrollButton), // updates when showScrollButton is changed!
-                      child: showScrollButton
-                        ? scrollButtonAndNotifier()
-                        : const SizedBox(height: 0, width: 0),
-                    ),
-                  ],
-                ),
-              ),
-              messageSender(),
-            ],
-          ),
+        : Stack(
+          children: [
+            chatMessages(),
+            Positioned(bottom: 0, left: 0, right: 0, child: messageSender()),
+          ],
+        ),
+              
       ),
     );
   }
@@ -289,53 +263,63 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   messageSender() {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width,
-
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: Colors.black12,
-              width: 1.0,
-            ),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: TextFormField(
-                  onFieldSubmitted: (e) {
-                    sendMessage();
-                  },
-                  // Allow enter to submit message
-                  keyboardType: TextInputType.text,
-                  controller: _messageController,
-                  decoration: const InputDecoration(
-                    hintText: "Send a message...",
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.only(left: 16.0, top: 16.0, bottom: 16.0),
-                    isDense: true,
-                  ),
-                  minLines: 1,
-                  maxLines: 3,
-                ),
-              ),
-              InkWell(
-                onTap: () => sendMessage(),
-                child: const Padding(
-                  padding: EdgeInsets.only(top: 16.0, right: 16.0, bottom: 16.0),
-                  child: Icon(
-                    Icons.send,
-                    color: Consts.sentColor, 
-                  ),
-                ),
-              )
-            ],
-          )
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          key: ValueKey<bool>(showScrollButton), // updates when showScrollButton is changed!
+          child: showScrollButton
+            ? scrollButtonAndNotifier()
+            : const SizedBox(height: 0, width: 0),
         ),
-      ),
+        Container(
+          padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color.fromARGB(0, 249, 249, 249), Consts.backgroundColor]),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Consts.foregroundColor,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: const [
+                BoxShadow(color: Color.fromARGB(24, 0, 0, 0), blurRadius: 8.0, offset: Offset(2, 4))
+              ]
+            ),
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  child: TextFormField(
+                    onFieldSubmitted: (e) {
+                      sendMessage();
+                    },
+                    // Allow enter to submit message
+                    keyboardType: TextInputType.text,
+                    controller: _messageController,
+                    decoration: const InputDecoration(
+                      hintText: "Send a message...",
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.only(left: 16.0, top: 16.0, bottom: 16.0),
+                      isDense: true,
+                    ),
+                    minLines: 1,
+                    maxLines: 3,
+                  ),
+                ),
+                InkWell(
+                  onTap: () => sendMessage(),
+                  child: const Padding(
+                    padding: EdgeInsets.only(top: 16.0, right: 16.0, bottom: 16.0),
+                    child: Icon(
+                      Icons.send,
+                      color: Consts.sentColor, 
+                    ),
+                  ),
+                )
+              ],
+            )
+          ),
+        ),
+      ],
     );
   }
 
@@ -380,8 +364,11 @@ class _ChatPageState extends State<ChatPage> {
               controller: _scrollController,
               scrollDirection: Axis.vertical,
               shrinkWrap: true,
-              itemCount: snapshot.data.docs.length,
+              itemCount: snapshot.data.docs.length + 1,
               itemBuilder: (context, index) {
+                if(index == snapshot.data.docs.length) {
+                  return const SizedBox(height: 70);
+                }
                 return snapshot.data.docs[index]["isAlert"] 
                   ? Alert(
                     sender: snapshot.data.docs[index]["sender"],

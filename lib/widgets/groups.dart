@@ -23,63 +23,40 @@ class _GroupsState extends State<Groups> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 300,
-      child: Scaffold(
-        appBar: CustomAppBar(
-          title: Text(
-            "Your Groups",
-            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
-          ) ,
-          backgroundColor: Consts.backgroundColor,
-          actions: [
-            Padding(
-              padding: Consts.appBarIconPadding,
-              child: const ActionButton(defaultIcon: Icons.group_add_outlined, hoverIcon: Icons.group_add, popUpWidget: JoinGroupPopUp(), title: "Join Group"),
-            ),
-            Padding(
-              padding: Consts.appBarIconPadding,
-              child: const ActionButton(defaultIcon: Icons.create_outlined, hoverIcon: Icons.create, popUpWidget: CreateGroupPopUp(), title: "Create Group"),
-            ),
-            const Padding(padding: EdgeInsets.all(4.0)),
-          ]
+    return Scaffold(
+      backgroundColor: Consts.foregroundColor,
+      appBar: CustomAppBar(
+        height: 50,
+        title: Text(
+          "Your Groups",
+          style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
         ),
-        body: StreamBuilder(
-          stream: DatabaseService().getUserGroups(),
-          builder: (context, snapshot) {
-            // Placeholder list of tiles
-            if(snapshot.connectionState == ConnectionState.waiting) {
-              return ListView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return const GroupTilePlaceholder();
-                },
-              );
-            }
-            if(snapshot.hasData) {
-              if(snapshot.data.length == 0) {
-                return Center(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Text("You haven't joined any groups yet."),
-                      SizedBox(height: 5.0),
-                      NoGroupsJoinGroupButton(),
-                      SizedBox(height: 5.0),
-                      NoGroupsCreateGroupButton()
-                    ]
-                  )
-                );
-              }
-              return ListView.builder(
-                itemCount: snapshot.data.length,
-                itemBuilder: (context, index) {
-                  return GroupTile(info: snapshot.data[index].data());
-                },
-              );
-            } else {
-              // No groups for this user
+        actions: [
+          Padding(
+            padding: Consts.appBarIconPadding,
+            child: const ActionButton(defaultIcon: Icons.group_add_outlined, hoverIcon: Icons.group_add, popUpWidget: JoinGroupPopUp(), title: "Join Group"),
+          ),
+          Padding(
+            padding: Consts.appBarIconPadding,
+            child: const ActionButton(defaultIcon: Icons.create_outlined, hoverIcon: Icons.create, popUpWidget: CreateGroupPopUp(), title: "Create Group"),
+          ),
+          const Padding(padding: EdgeInsets.all(4.0)),
+        ]
+      ),
+      body: StreamBuilder(
+        stream: DatabaseService().getUserGroups(),
+        builder: (context, snapshot) {
+          // Placeholder list of tiles
+          if(snapshot.connectionState == ConnectionState.waiting) {
+            return ListView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              itemBuilder: (context, index) {
+                return const GroupTilePlaceholder();
+              },
+            );
+          }
+          if(snapshot.hasData) {
+            if(snapshot.data.length == 0) {
               return Center(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -94,15 +71,15 @@ class _GroupsState extends State<Groups> {
                 )
               );
             }
-          },
-        ),
-        /* Container(
-          color: Consts.backgroundColor,
-          // Outer StreamBuilder: list of all group ID's associated with this user
-          // Get the group with this ID from the database
-          // Use another StreamBuilder to pull the actual info from this group
-          child: groupIDs.isEmpty
-            ? Center(
+            return ListView.builder(
+              itemCount: snapshot.data.length,
+              itemBuilder: (context, index) {
+                return GroupTile(info: snapshot.data[index].data());
+              },
+            );
+          } else {
+            // No groups for this user
+            return Center(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -114,31 +91,9 @@ class _GroupsState extends State<Groups> {
                   NoGroupsCreateGroupButton()
                 ]
               )
-            )
-            : ListView.builder(
-              itemCount: groups.length + 1, // +1 to allow padding on the end of the list
-              shrinkWrap: true,
-              physics: const BouncingScrollPhysics(),
-              itemBuilder: (context, index) {
-                if(index == groups.length) { return const Padding(padding: EdgeInsets.all(4.0)); }
-                return StreamBuilder(
-                  stream: groups[index],
-                  builder:(context, AsyncSnapshot snapshot) {
-                    if(snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: GroupTilePlaceholder());
-                    }
-                    if(snapshot.hasData) {
-                      return GroupTile(info: snapshot.data!.data(), index: index);
-                    } else { 
-                      return Container(); // ?
-                    }
-                  },
-                );
-              },
-              
-            ),
-        )
-        */
+            );
+          }
+        },
       ),
     );
   }
@@ -192,41 +147,43 @@ class _GroupTilePlaceholderState extends State<GroupTilePlaceholder> with Single
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: Consts.groupTileHeight,
-      padding: Consts.groupTilePadding,
-      constraints: const BoxConstraints(minHeight: Consts.groupTileHeight),
-      color: Consts.backgroundColor,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const ShimmerPlaceholder(
-            height: 52,
-            width: 52,
-            isRounded: true,
-          ),
-          const SizedBox(width: 8.0),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                ShimmerPlaceholder(
-                  height: 12, 
-                  width: 50, 
-                  isRounded: false
-                ),
-                SizedBox(height: 3),
-                ShimmerPlaceholder(
-                  height: 12, 
-                  width: 150, 
-                  isRounded: false
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      child: Container(
+        height: Consts.groupTileHeight,
+        padding: Consts.groupTilePadding,
+        constraints: const BoxConstraints(minHeight: Consts.groupTileHeight),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const ShimmerPlaceholder(
+              height: 52,
+              width: 52,
+              isRounded: true,
             ),
-          )
-        ],
-      )
+            const SizedBox(width: 8.0),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  ShimmerPlaceholder(
+                    height: 12, 
+                    width: 50, 
+                    isRounded: false
+                  ),
+                  SizedBox(height: 3),
+                  ShimmerPlaceholder(
+                    height: 12, 
+                    width: 150, 
+                    isRounded: false
+                  ),
+                ],
+              ),
+            )
+          ],
+        )
+      ),
     );
   }
 }
@@ -248,114 +205,125 @@ class _GroupTileState extends State<GroupTile> {
     String selectedID = context.watch<MainViewModel>().selectedGroupId;
     bool selected = selectedID == widget.info["id"];
 
-    return InkWell(
-      onTap: () {
-        // Don't need to load a new group page if it's already selected
-        if(!selected) {
-          context.read<MainViewModel>().selectedGroupId = widget.info["id"];
-          context.read<MainViewModel>().selectedGroupName = widget.info["name"];
-          context.read<MainViewModel>().selectedGroupMembers = widget.info["members"];
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      child: InkWell(
+        onTap: () {
+          // Don't need to load a new group page if it's already selected
+          if(!selected) {
+            context.read<MainViewModel>().selectedGroupId = widget.info["id"];
+            context.read<MainViewModel>().selectedGroupName = widget.info["name"];
+            context.read<MainViewModel>().selectedGroupMembers = widget.info["members"];
 
-          // For when the groups page appears via button
-          if(MediaQuery.of(context).size.width <= Consts.cutoffWidth) {
-            Navigator.pop(context);
+            // For when the groups page appears via button
+            if(MediaQuery.of(context).size.width <= Consts.cutoffWidth) {
+              Navigator.pop(context);
+            }
           }
-        }
-      },
-      onHover: (hover) {
-        setState(() {
-          hovering = hover;
-        });
-      },
-      child: AnimatedContainer(
-        duration: Consts.animationDuration,
-        padding: Consts.groupTilePadding,
-        constraints: const BoxConstraints(minHeight: Consts.groupTileHeight),
-        color: selected
-          ? Consts.selectedColor
-          : hovering ? Consts.hoverColor : Consts.backgroundColor,
+        },
+        onHover: (hover) {
+          setState(() {
+            hovering = hover;
+          });
+        },
+        hoverColor: Colors.transparent,
+        focusColor: Colors.transparent,
+        highlightColor: Colors.transparent,
         
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              backgroundColor: selected ? Theme.of(context).colorScheme.primary : Color.fromARGB(44, 0, 0, 0),
-              radius: 26,
-              child: Text(
-                HelperFunctions.abbreviate(widget.info["name"]),
-                style: Theme.of(context).textTheme.headline6?.copyWith(
-                  color: selected ? Colors.white : Colors.black,
+        child: AnimatedContainer(
+          duration: Consts.animationDuration,
+          padding: Consts.groupTilePadding,
+          constraints: const BoxConstraints(minHeight: Consts.groupTileHeight),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: selected
+              ? Consts.selectedColor
+              : hovering ? Consts.hoverColor : Consts.foregroundColor,
+          ),
+          
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                backgroundColor: selected ? Theme.of(context).colorScheme.primary : Color.fromARGB(44, 0, 0, 0),
+                radius: 26,
+                child: Text(
+                  HelperFunctions.abbreviate(widget.info["name"]),
+                  style: Theme.of(context).textTheme.headline6?.copyWith(
+                    color: selected ? Colors.white : Colors.black,
+                  )
                 )
-              )
-            ),
-        
-            const SizedBox(width: 8.0),
-        
-            Expanded(
-              child: Container(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Title of the group
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            widget.info["name"],
-                            maxLines: 1,
-                            // ellipsis bugs out with custom font
-                            overflow: TextOverflow.clip,
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w700, 
-                              color: selected ? Theme.of(context).colorScheme.primary : Colors.black,
+              ),
+          
+              const SizedBox(width: 8.0),
+          
+              Expanded(
+                child: Container(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Title of the group
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              widget.info["name"],
+                              maxLines: 1,
+                              // ellipsis bugs out with custom font
+                              overflow: TextOverflow.clip,
+                              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w700, 
+                                color: selected ? Theme.of(context).colorScheme.primary : Colors.black,
+                              ),
                             ),
                           ),
-                        ),
-                        widget.info["lastMessage"] == "" ? Container() : Text(
-                          HelperFunctions.timeStampToStringShort(widget.info["lastMessageTimeStamp"]),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.black38, 
+                          const SizedBox(width: 4.0),
+                          widget.info["lastMessage"] == "" ? Container() : Text(
+                            HelperFunctions.timeStampToStringShort(widget.info["lastMessageTimeStamp"]),
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.black38, 
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-            
-                    const SizedBox(height: 3.0),
-            
-                    // Last message sent
-                    widget.info["lastMessage"] == ""
-                      ? Text(
-                          "No messages yet.",
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.black54,
-                            fontStyle: FontStyle.italic
-                          ),
-                        )
-                      : RichText(
-                          maxLines: 2,
-                          // ellipsis bugs out with custom font
-                          overflow: TextOverflow.clip,
-                          text: TextSpan(
-                            text: "${widget.info["lastMessageSender"]}: ",
+                        ],
+                      ),
+              
+                      const SizedBox(height: 3.0),
+              
+                      // Last message sent
+                      widget.info["lastMessage"] == ""
+                        ? Text(
+                            "No messages yet.",
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.black54,
+                              fontStyle: FontStyle.italic
                             ),
-                            children: [
-                              TextSpan(
-                                text: widget.info["lastMessage"],
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: Colors.black38, 
-                                ),
+                          )
+                        : RichText(
+                            maxLines: 2,
+                            // ellipsis bugs out with custom font
+                            overflow: TextOverflow.clip,
+                            text: TextSpan(
+                              text: "${widget.info["lastMessageSender"]}: ",
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.black54,
                               ),
-                            ]
-                          ),
-                      )
-                  ],
+                              children: [
+                                TextSpan(
+                                  text: widget.info["lastMessage"],
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.black38, 
+                                  ),
+                                ),
+                              ]
+                            ),
+                        )
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

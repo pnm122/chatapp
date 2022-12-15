@@ -2,18 +2,19 @@ import 'package:chatapp/consts.dart';
 import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CustomAppBar({super.key, this.leading, this.title, this.centerTitle, this.actions, this.backgroundColor = Consts.foregroundColor, this.hasBottom = false});
+  const CustomAppBar({super.key, this.leading, this.title, this.centerTitle, this.actions, this.backgroundColor = Consts.foregroundColor, this.hasBottom = false, this.height = 65.0});
   final Widget? leading;
   final Widget? title;
   final bool? centerTitle;
   final List<Widget>? actions;
   final Color backgroundColor;
   final bool hasBottom;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      toolbarHeight: 65.0,
+      toolbarHeight: height,
       backgroundColor: backgroundColor,
       shadowColor: Colors.transparent,
       foregroundColor: Theme.of(context).colorScheme.primary,
@@ -27,7 +28,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
   
   @override
-  Size get preferredSize => const Size.fromHeight(65);
+  Size get preferredSize => Size.fromHeight(height);
 }
 
 class BottomDivider extends StatelessWidget implements PreferredSizeWidget {
