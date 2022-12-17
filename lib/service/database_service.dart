@@ -10,9 +10,6 @@ class DatabaseService {
   final CollectionReference userCollection = 
     FirebaseFirestore.instance.collection("users");
 
-  final CollectionReference messageCollection = 
-    FirebaseFirestore.instance.collection("messages");
-
   final CollectionReference groupCollection =
     FirebaseFirestore.instance.collection("groups");
 
@@ -33,7 +30,13 @@ class DatabaseService {
       "lastMessageSender": "",
       "lastMessageTimeStamp": -1,
       "members": [FirebaseAuth.instance.currentUser!.uid],
+      "numMessages": 0,
       // Also will have a collection of messages
+    });
+
+    // Add a count of messages read for this user
+    await group.collection("messagesReadByUser").doc(FirebaseAuth.instance.currentUser!.uid).set({
+      "numMessages": 0,
     });
 
     // Store the ID in the group as well so it's easier to pull out later
@@ -49,15 +52,14 @@ class DatabaseService {
     String id = FirebaseAuth.instance.currentUser!.uid;
     try {
       DocumentReference group = groupCollection.doc(groupID);
-      
-      /*if(await group.get().then((value) => (value.data() as Map<String, dynamic>)["members"].contains(id))) {
-
-      }*/
       await group.update({
         "members": FieldValue.arrayUnion([id])
       });
       await userCollection.doc(id).update({
         "groups": FieldValue.arrayUnion([groupID])
+      });
+      await group.collection("messagesReadByUser").doc(FirebaseAuth.instance.currentUser!.uid).set({
+        "numMessages": 0,
       });
 
       return true;
@@ -137,9 +139,35 @@ class DatabaseService {
     });
   }
 
+  /// Update the number of messasges read for the current user to equal the total number of messages in the group
+  readAllMessages(String groupID) {
+    var group = groupCollection.doc(groupID);
+    group.get().then((value) {
+      int totalMessages = (value.data() as Map)["numMessages"];
+      group.collection("messagesReadByUser").doc(FirebaseAuth.instance.currentUser!.uid).update({
+        "numMessages": totalMessages,
+      });
+    });
+  }
+
+  Future<int> getNumberOfNewMessages(String groupID) async {
+    var group = groupCollection.doc(groupID);
+    return await group.get().then((value) {
+      int totalMessages = (value.data() as Map)["numMessages"];
+      return group.collection("messagesReadByUser").doc(FirebaseAuth.instance.currentUser!.uid).get().then((value) {
+        return totalMessages - (value.data() as Map)["numMessages"] as int;
+      });
+    });
+  }
+
   getMessages(String groupID) {
     if(groupID.isEmpty) return null;
     return groupCollection.doc(groupID).collection("messages").orderBy("timeStamp").snapshots();
+  }
+
+  Future getMessagesSince(String groupID, int timeStamp) async {
+    if(groupID.isEmpty) return "empty";
+    return await groupCollection.doc(groupID).collection("messages").where("timeStamp", isGreaterThan: timeStamp).snapshots().length;
   }
 
   sendMessage(String groupID, Map<String, dynamic> messageMap) async {
@@ -149,6 +177,11 @@ class DatabaseService {
       "lastMessage": messageMap["message"],
       "lastMessageSender": messageMap["sender"],
       "lastMessageTimeStamp": messageMap["timeStamp"],
+      "numMessages": FieldValue.increment(1),
+    });
+    // Increment the number of messages this user has seen as well, since they're on the page when the message is sent
+    group.collection("messagesReadByUser").doc(FirebaseAuth.instance.currentUser!.uid).update({
+      "numMessages": FieldValue.increment(1)
     });
   }
 }

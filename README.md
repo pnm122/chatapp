@@ -23,23 +23,23 @@ A group-based chat application created by Pierce Martin
 * Tell when a person is in the browser? Or when they go AFK?
 * Show which users are active/not on the chat page
 * Account renaming
+* Notification bubble on groups icon when a group has new messages
 
 ### To Do
-* Version info page
 * Username max length
 * Group together messages in similar times
 * Profile pictures & Group pictures
 * Replies (using gestures? :o)
 * Group deleting
+* Version info page
 * Pin messages
 * Attachments
-* Notification bubble on groups icon when a group has new messages?
 * Find a way to constrain the size of groups on small screen size
 * Dark mode switiching support
 * Notification alert
 
 ### Known issues
-* Group name overflows if long enough on the right screen size
+* New users get prompted to set user name every time the screen updates
 * AuthStateChanges not updating for some reason after signing out
 * Scroll to bottom on new message is a little buggy? Doesn't always go all the way to the bottom
 * setState() being called after widget destruction in (i think) groups.dart

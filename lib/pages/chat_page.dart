@@ -218,15 +218,21 @@ class _ChatPageState extends State<ChatPage> {
         hasBottom: true,
       ),
       body: Container(
-      color: Consts.backgroundColor,
-      child: groupID == "" 
-        ? const Center(child: Text("Please select a group"))
-        : Stack(
-          children: [
-            chatMessages(),
-            Positioned(bottom: 0, left: 0, right: 0, child: messageSender()),
-          ],
-        ),
+        color: Consts.backgroundColor,
+        child: groupID == "" 
+          ? const Center(child: Text("Please select a group"))
+          : Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    chatMessages(),
+                    Positioned(bottom: 0, left: 0, right: 0, child: messageSender()),
+                  ],
+                ),
+              ),
+            ],
+          ),
               
       ),
     );

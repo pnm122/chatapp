@@ -198,9 +198,15 @@ class GroupTile extends StatefulWidget {
 
 class _GroupTileState extends State<GroupTile> {
   bool hovering = false;
+  int numNewMessages = 0;
 
   @override
   Widget build(BuildContext context) {
+    DatabaseService().getNumberOfNewMessages(widget.info["id"]).then((value) {
+      setState(() {
+        numNewMessages = value;
+      });
+    });
 
     String selectedID = context.watch<MainViewModel>().selectedGroupId;
     bool selected = selectedID == widget.info["id"];
@@ -214,6 +220,7 @@ class _GroupTileState extends State<GroupTile> {
             context.read<MainViewModel>().selectedGroupId = widget.info["id"];
             context.read<MainViewModel>().selectedGroupName = widget.info["name"];
             context.read<MainViewModel>().selectedGroupMembers = widget.info["members"];
+            DatabaseService().readAllMessages(widget.info["id"]);
 
             // For when the groups page appears via button
             if(MediaQuery.of(context).size.width <= Consts.cutoffWidth) {
@@ -291,33 +298,43 @@ class _GroupTileState extends State<GroupTile> {
                       const SizedBox(height: 3.0),
               
                       // Last message sent
-                      widget.info["lastMessage"] == ""
-                        ? Text(
-                            "No messages yet.",
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.black54,
-                              fontStyle: FontStyle.italic
-                            ),
-                          )
-                        : RichText(
-                            maxLines: 2,
-                            // ellipsis bugs out with custom font
-                            overflow: TextOverflow.clip,
-                            text: TextSpan(
-                              text: "${widget.info["lastMessageSender"]}: ",
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.black54,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: widget.info["lastMessage"],
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          widget.info["lastMessage"] == ""
+                            ? Expanded(
+                              child: Text(
+                                  "No messages yet.",
                                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.black38, 
+                                    color: Colors.black54,
+                                    fontStyle: FontStyle.italic
                                   ),
                                 ),
-                              ]
+                            )
+                            : Expanded(
+                              child: RichText(
+                                  maxLines: 2,
+                                  // ellipsis bugs out with custom font
+                                  overflow: TextOverflow.clip,
+                                  text: TextSpan(
+                                    text: "${widget.info["lastMessageSender"]}: ",
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: Colors.black54,
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: widget.info["lastMessage"],
+                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          color: Colors.black38, 
+                                        ),
+                                      ),
+                                    ]
+                                  ),
+                              ),
                             ),
-                        )
+                          NewMessagesBubble(numNewMessages: numNewMessages),
+                        ],
+                      )
                     ],
                   ),
                 ),
@@ -327,6 +344,29 @@ class _GroupTileState extends State<GroupTile> {
         ),
       ),
     );
+  }
+}
+
+class NewMessagesBubble extends StatelessWidget {
+  const NewMessagesBubble({super.key, required this.numNewMessages});
+  final int numNewMessages;
+
+  @override
+  Widget build(BuildContext context) {
+    return numNewMessages > 0 ? Container(
+      width: 18,
+      height: 18,
+      decoration: const BoxDecoration(
+        color: Colors.red,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          numNewMessages > 9 ? "9+" : numNewMessages.toString(),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white),
+        ),
+      ),
+    ) : Container();
   }
 }
 
