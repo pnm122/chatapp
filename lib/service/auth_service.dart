@@ -8,36 +8,18 @@ class AuthService with ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   //_firebaseAuth.currentUser.updateDisplayName(displayName)
 
-  UserCredential? _user;
-
-  UserCredential? get user => _user;
-
-  Future createAccountWithEmailAndPass(String email, String pass) async {
-    try {
-      await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email, 
-        password: pass
-      ).then((credential) {
-        _user = credential;
-        return null;
-      },);
-    } on FirebaseAuthException catch(e) {
-      return e.code;
-    }
+  Future<UserCredential> createAccountWithEmailAndPass(String email, String pass) async {
+    return await _firebaseAuth.createUserWithEmailAndPassword(
+      email: email, 
+      password: pass
+    );
   }
 
-  Future signInWithEmailAndPass(String email, String pass) async {
-    try {
-      await _firebaseAuth.signInWithEmailAndPassword(
-        email: email, 
-        password: pass
-      ).then((credential) {
-        _user = credential;
-        return null;
-      },);
-    } on FirebaseAuthException catch(e) {
-      return e.code;
-    }
+  Future<UserCredential> signInWithEmailAndPass(String email, String pass) async {
+    return await _firebaseAuth.signInWithEmailAndPassword(
+      email: email, 
+      password: pass
+    );
   }
 
   Future<UserCredential> signInWithGoogle() async {

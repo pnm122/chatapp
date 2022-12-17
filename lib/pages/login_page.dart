@@ -151,25 +151,14 @@ class _LoginPageState extends State<LoginPage> {
                               if(_formKey.currentState!.validate()) {
                                 // Use the same authservice provider for all authentication purposes!
                                 var provider = Provider.of<AuthService>(context, listen: false);
-                                bool creating = false;
-                                var error;
 
-                                isLoginForm ? await provider.signInWithEmailAndPass(userEmail, userPass).then((result) {
-                                  error = result;
-                                }) : await provider.createAccountWithEmailAndPass(userEmail, userPass).then((result) {
-                                  error = result;
-                                  creating = true;
-                                });
-
-                                // No error => add user to the database
-                                // Error => display error
-                                if(error == null) {
-                                  if(creating) { DatabaseService().createUser(provider.user!); } 
-                                  else { DatabaseService().setActive(); }
-                                  HelperFunctions.saveUserID(provider.user!.user!.uid);
-                                } else {
-                                  showError(error);
-                                }
+                                isLoginForm 
+                                ? await provider.signInWithEmailAndPass(userEmail, userPass).then((result) {
+                                  DatabaseService().setActive();
+                                }, onError: (e) { showError(e); }) 
+                                : await provider.createAccountWithEmailAndPass(userEmail, userPass).then((result) {
+                                  DatabaseService().setActive();
+                                }, onError: (e) { showError(e); });
                               }
                             },
                             child: Text(isLoginForm ? "Sign in" : "Register"),
@@ -195,17 +184,11 @@ class _LoginPageState extends State<LoginPage> {
                     ElevatedButton.icon(
                       onPressed: () async {
                         final provider = Provider.of<AuthService>(context, listen: false);
-                        provider.signInWithGoogle();
-                        /*await provider.signInWithGoogle().then((error) {
-                          if(error == null) {
-                            print(provider.user!.additionalUserInfo!.isNewUser);
-                            if(provider.user!.additionalUserInfo!.isNewUser) { DatabaseService().createUser(provider.user!); } 
-                            else { DatabaseService().setActive(); }
-                            HelperFunctions.saveUserID(provider.user!.user!.uid);
-                          } else {
-                            showError(error.toString());
-                          }
-                        });*/
+                        provider.signInWithGoogle().then((value) {
+                          if(!isLoginForm) DatabaseService().createUser(value);
+                          DatabaseService().setActive();
+                        }, 
+                        onError: (e) {});
                       },
 
                       style: ElevatedButton.styleFrom(
@@ -227,7 +210,7 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  showError(String error) {
+  showError(FirebaseAuthException error) {
     showModalBottomSheet(
       context: context, 
       builder: ((context) {
@@ -235,7 +218,7 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.all(12.0),
           color: Theme.of(context).colorScheme.error,
           child: Text(
-            error, 
+            error.message == null ? "Unknown Error" : error.message!, 
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onError),
             textAlign: TextAlign.center,
           ),
