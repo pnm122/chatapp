@@ -39,7 +39,6 @@ A group-based chat application created by Pierce Martin
 * Notification alert
 
 ### Known issues
-* New users get prompted to set user name every time the screen updates
 * AuthStateChanges not updating for some reason after signing out
 * Scroll to bottom on new message is a little buggy? Doesn't always go all the way to the bottom
 * setState() being called after widget destruction in (i think) groups.dart

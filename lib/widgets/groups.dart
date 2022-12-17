@@ -199,6 +199,19 @@ class GroupTile extends StatefulWidget {
 class _GroupTileState extends State<GroupTile> {
   bool hovering = false;
   int numNewMessages = 0;
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void setState(VoidCallback fn) {
+    if(_disposed) return;
+    super.setState(fn);
+  }
 
   @override
   Widget build(BuildContext context) {

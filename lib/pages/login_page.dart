@@ -195,7 +195,8 @@ class _LoginPageState extends State<LoginPage> {
                     ElevatedButton.icon(
                       onPressed: () async {
                         final provider = Provider.of<AuthService>(context, listen: false);
-                        await provider.signInWithGoogle().then((error) {
+                        provider.signInWithGoogle();
+                        /*await provider.signInWithGoogle().then((error) {
                           if(error == null) {
                             print(provider.user!.additionalUserInfo!.isNewUser);
                             if(provider.user!.additionalUserInfo!.isNewUser) { DatabaseService().createUser(provider.user!); } 
@@ -204,7 +205,7 @@ class _LoginPageState extends State<LoginPage> {
                           } else {
                             showError(error.toString());
                           }
-                        });
+                        });*/
                       },
 
                       style: ElevatedButton.styleFrom(

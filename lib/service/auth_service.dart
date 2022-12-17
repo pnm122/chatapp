@@ -40,33 +40,21 @@ class AuthService with ChangeNotifier {
     }
   }
 
-  Future signInWithGoogle() async {
+  Future<UserCredential> signInWithGoogle() async {
     final account = await GoogleSignIn().signIn();
-    if(account == null) return null;
 
-    final auth = await account.authentication;
-    try {
-      await _firebaseAuth.signInWithCredential(
-        GoogleAuthProvider.credential(
-          idToken: auth.idToken,
-          accessToken: auth.accessToken
-        )
-      ).then((credential) {
-        _user = credential;
-      });
-      return null;
-    } on FirebaseAuthException catch(e) {
-      //print(e.message);
-      return e.code;
-    }
+    final GoogleSignInAuthentication? auth = await account!.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      idToken: auth?.idToken,
+      accessToken: auth?.accessToken
+    );
+
+    return await _firebaseAuth.signInWithCredential(credential);
   }
 
   Future signOut() async {
-    try {
-      await GoogleSignIn().signOut();
-      await FirebaseAuth.instance.signOut();
-    } catch(e) {
-      return null;
-    }
+    await GoogleSignIn().signOut();
+    await FirebaseAuth.instance.signOut();
   }
 }

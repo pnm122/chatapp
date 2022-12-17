@@ -13,7 +13,9 @@ class DatabaseService {
   final CollectionReference groupCollection =
     FirebaseFirestore.instance.collection("groups");
 
-  Future createUser(UserCredential user) async {
+  createUser(UserCredential user) async {
+    if(!verify()) return;
+
     await userCollection.doc(user.user?.uid).set({
       "displayName": "",
       "createdTime": DateTime.now().millisecondsSinceEpoch,
@@ -22,7 +24,9 @@ class DatabaseService {
     });
   }
 
-  Future createGroup(String groupName) async {
+  createGroup(String groupName) async {
+    if(!verify()) return;
+
     DocumentReference group = await groupCollection.add({
       "name": groupName,
       "createdTime": DateTime.now().millisecondsSinceEpoch,
@@ -48,7 +52,9 @@ class DatabaseService {
     });
   }
 
-  Future joinGroup(String groupID) async {
+  joinGroup(String groupID) async {
+    if(!verify()) return;
+
     String id = FirebaseAuth.instance.currentUser!.uid;
     try {
       DocumentReference group = groupCollection.doc(groupID);
@@ -68,28 +74,38 @@ class DatabaseService {
     }
   }
 
-  Future renameGroup(String id, String name) async {
+  renameGroup(String id, String name) async {
+    if(!verify()) return;
+
     await groupCollection.doc(id).update({
       "name": name,
     });
   }
 
-  Stream<DocumentSnapshot> getCurrentUserInfo() {
+  Stream<DocumentSnapshot>? getCurrentUserInfo() {
+    if(!verify()) return null;
+
     // Use instead of HelperFunctions method to get current user ID?
     String? uid = FirebaseAuth.instance.currentUser!.uid;
     return userCollection.doc(uid).snapshots();
   }
 
-  Future<String> getCurrentUserName() async {
+  getCurrentUserName() async {
+    if(!verify()) return null;
+
     String? uid = FirebaseAuth.instance.currentUser!.uid;
     return await userCollection.doc(uid).get().then((value) => (value.data() as Map<String, dynamic>)["displayName"]);
   }
 
-  Stream<DocumentSnapshot> getGroup(String groupId) {
+  Stream<DocumentSnapshot>? getGroup(String groupId) {
+    if(!verify()) return null;
+
     return groupCollection.doc(groupId).snapshots();
   }
 
-  Stream getGroupUsers(String groupId) {
+  Stream? getGroupUsers(String groupId) {
+    if(!verify()) return null;
+
     return userCollection.snapshots().map((event) {
       List users = [];
       for(var doc in event.docs) {
@@ -101,7 +117,9 @@ class DatabaseService {
     });
   }
 
-  Stream getUserGroups() {
+  Stream? getUserGroups() {
+    if(!verify()) return null;
+
     // Get all groups that contain the current user's ID in them, then sort by most recent message
     // This list updates automatically thanks to snapshots()
     return groupCollection.snapshots().map((event) {
@@ -122,25 +140,37 @@ class DatabaseService {
   }
 
   Future setDisplayName(String displayName) async {
+    if(!verify()) return;
+
     await userCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
       "displayName": displayName,
     });
   }
 
   Future setInactive() async {
-    await userCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
+    if(!verify()) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if(user == null) return;
+    await userCollection.doc(user.uid).update({
       "active": false,
     });
   }
 
   Future setActive() async {
-    await userCollection.doc(FirebaseAuth.instance.currentUser!.uid).update({
+    if(!verify()) return;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if(user == null) return;
+    await userCollection.doc(user.uid).update({
       "active": true,
     });
   }
 
   /// Update the number of messasges read for the current user to equal the total number of messages in the group
   readAllMessages(String groupID) {
+    if(!verify()) return;
+
     var group = groupCollection.doc(groupID);
     group.get().then((value) {
       int totalMessages = (value.data() as Map)["numMessages"];
@@ -150,7 +180,9 @@ class DatabaseService {
     });
   }
 
-  Future<int> getNumberOfNewMessages(String groupID) async {
+  Future getNumberOfNewMessages(String groupID) async {
+    if(!verify()) return;
+
     var group = groupCollection.doc(groupID);
     return await group.get().then((value) {
       int totalMessages = (value.data() as Map)["numMessages"];
@@ -161,16 +193,22 @@ class DatabaseService {
   }
 
   getMessages(String groupID) {
+    if(!verify()) return;
+
     if(groupID.isEmpty) return null;
     return groupCollection.doc(groupID).collection("messages").orderBy("timeStamp").snapshots();
   }
 
   Future getMessagesSince(String groupID, int timeStamp) async {
+    if(!verify()) return;
+
     if(groupID.isEmpty) return "empty";
     return await groupCollection.doc(groupID).collection("messages").where("timeStamp", isGreaterThan: timeStamp).snapshots().length;
   }
 
   sendMessage(String groupID, Map<String, dynamic> messageMap) async {
+    if(!verify()) return;
+
     var group = groupCollection.doc(groupID);
     // Increment the number of messages this user has seen as well, since they're on the page when the message is sent
     // Do this first to stop the new messages # from appearing on the UI
@@ -184,5 +222,11 @@ class DatabaseService {
       "lastMessageTimeStamp": messageMap["timeStamp"],
       "numMessages": FieldValue.increment(1),
     });
+  }
+
+  /// Verify if the user is currently logged. Returns true if logged in, false otherwise
+  /// Doesn't seem to stop errors :(
+  bool verify() {
+    return FirebaseAuth.instance.currentUser != null;
   }
 }

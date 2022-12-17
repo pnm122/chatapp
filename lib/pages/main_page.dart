@@ -18,27 +18,12 @@ import 'package:chatapp/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'dart:html' as html;
-
 class MainPage extends StatelessWidget {
   const MainPage({super.key, required this.viewModel});
   final viewModel;
 
   @override
   Widget build(BuildContext context) {
-    // Set active state of user depending on the window state
-    // Put this inside MainPage since the user is guaranteed to be logged in here
-    html.window.onBeforeUnload.listen((event) async {
-      await DatabaseService().setInactive();
-    });
-    html.window.onBlur.listen((event) async {
-      await DatabaseService().setInactive();
-    });
-    html.window.onFocus.listen((event) async {
-      await DatabaseService().setActive();
-    });
-
-
     var provider = Provider.of<AuthService>(context, listen: false);
 
     var selectedGroupName = context.watch<MainViewModel>().selectedGroupName;

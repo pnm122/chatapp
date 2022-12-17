@@ -23,21 +23,26 @@ class _InfoPageState extends State<InfoPage> {
 
   String displayName = "";
   int userCreatedTime = -1;
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    DatabaseService().getCurrentUserInfo().first.then((value) { 
-      setState(() {
-        displayName = value["displayName"];
-        userCreatedTime = value["createdTime"];
+    Stream? userInfo = DatabaseService().getCurrentUserInfo();
+    if(userInfo != null && !_disposed) {
+      userInfo.first.then((value) { 
+        setState(() {
+          displayName = value["displayName"];
+          userCreatedTime = value["createdTime"];
+        });
       });
-    });
+    }
     
-    /*.then((value) {
-      setState(() {
-        displayName = value;
-      });
-    });*/
     return SizedBox(
       width: 300,
       child: Scaffold(
@@ -121,7 +126,6 @@ class _InfoPageState extends State<InfoPage> {
                 onPressed: () {
                   DatabaseService().setInactive();
                   Provider.of<AuthService>(context, listen: false).signOut();
-                  pushScreenReplace(context, const LoginPage());
                 },
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(Colors.transparent),
