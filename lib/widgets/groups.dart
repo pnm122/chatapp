@@ -202,11 +202,16 @@ class _GroupTileState extends State<GroupTile> {
 
   @override
   Widget build(BuildContext context) {
-    DatabaseService().getNumberOfNewMessages(widget.info["id"]).then((value) {
-      setState(() {
-        numNewMessages = value;
+    try {
+      DatabaseService().getNumberOfNewMessages(widget.info["id"]).then((value) {
+        setState(() {
+          numNewMessages = value;
+        });
       });
-    });
+    } catch (e) {
+      // On creating a new group, this throws an error (Expected a value of type 'String', but got one of type 'Null')
+      // No idea how to fix this
+    }
 
     String selectedID = context.watch<MainViewModel>().selectedGroupId;
     bool selected = selectedID == widget.info["id"];

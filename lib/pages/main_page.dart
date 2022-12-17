@@ -43,9 +43,11 @@ class MainPage extends StatelessWidget {
 
     var selectedGroupName = context.watch<MainViewModel>().selectedGroupName;
 
-    // Ask the user to create a username after creating an account
+    // Ask the user to create a username after creating an account (displayName is only empty right after making an account)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if(provider.user != null && provider.user!.additionalUserInfo!.isNewUser) {
+      DatabaseService().getCurrentUserName().then((value) {
+        if(value.isNotEmpty) return;
+
         TextEditingController _controller = TextEditingController();
 
         pushPopUp(context, Container(
@@ -80,7 +82,7 @@ class MainPage extends StatelessWidget {
             ],
           )
         ), "Create A Username", false);
-      }
+      });
     });
 
     return Row(
@@ -94,24 +96,6 @@ class MainPage extends StatelessWidget {
           child: ChatPage(viewModel: viewModel),
         ),
       ],
-    );
-  }
-}
-
-class Test extends StatefulWidget {
-  const Test({super.key});
-
-  @override
-  State<Test> createState() => _TestState();
-}
-
-class _TestState extends State<Test> {
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        "why"
-      )
     );
   }
 }
