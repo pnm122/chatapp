@@ -14,9 +14,6 @@ class Consts {
 
   static EdgeInsets appBarIconPadding =  const EdgeInsets.symmetric(horizontal: 4.0, vertical: 12.0);
 
-  static EdgeInsets messagePadding = const EdgeInsets.all(16.0);
-  static EdgeInsets messageSurroundPadding = const EdgeInsets.symmetric(horizontal: sideMargin, vertical: 16.0);
-
   static EdgeInsets groupSectionPadding =  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
   static EdgeInsets groupTilePadding = const EdgeInsets.all(12.0);
   static const double groupTileHeight = 76;

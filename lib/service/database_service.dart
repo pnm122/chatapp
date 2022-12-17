@@ -172,16 +172,17 @@ class DatabaseService {
 
   sendMessage(String groupID, Map<String, dynamic> messageMap) async {
     var group = groupCollection.doc(groupID);
+    // Increment the number of messages this user has seen as well, since they're on the page when the message is sent
+    // Do this first to stop the new messages # from appearing on the UI
+    group.collection("messagesReadByUser").doc(FirebaseAuth.instance.currentUser!.uid).update({
+      "numMessages": FieldValue.increment(1)
+    });
     group.collection("messages").add(messageMap);
     group.update({
       "lastMessage": messageMap["message"],
       "lastMessageSender": messageMap["sender"],
       "lastMessageTimeStamp": messageMap["timeStamp"],
       "numMessages": FieldValue.increment(1),
-    });
-    // Increment the number of messages this user has seen as well, since they're on the page when the message is sent
-    group.collection("messagesReadByUser").doc(FirebaseAuth.instance.currentUser!.uid).update({
-      "numMessages": FieldValue.increment(1)
     });
   }
 }

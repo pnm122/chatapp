@@ -1,29 +1,38 @@
+import 'package:chatapp/widgets/message_time_stamp.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/consts.dart';
 
 class Message extends StatelessWidget {
-  const Message({super.key, required this.sender, required this.sentByMe, required this.message, required this.timeStamp, required this.currentDisplayName});
+  const Message({
+    super.key, 
+    required this.sender,
+    required this.lastMessageSender,
+    required this.sentByMe, 
+    required this.message, 
+    required this.timeStamp, 
+    required this.lastMessageTimeStamp,
+    required this.currentDisplayName
+  });
   final String sender;
+  final String lastMessageSender;
   final bool sentByMe;
   final String message;
   final int timeStamp;
+  final int lastMessageTimeStamp;
   final String currentDisplayName;
 
   @override
   Widget build(BuildContext context) {
+    // 300,000 ms => 5 minutes
+    final bool showTimeStamp = timeStamp > lastMessageTimeStamp + 300000;
+    final bool groupingMessages = !showTimeStamp && sender == lastMessageSender;
     return Padding(
-      padding: Consts.messageSurroundPadding,
+      padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: Consts.sideMargin),
       child: Column(
         children: [
-          Center(
-            child: Text(
-              HelperFunctions.timeStampToString(timeStamp), 
-              textAlign: TextAlign.end,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
+          showTimeStamp ? MessageTimeStamp(timeStamp: timeStamp) : Container(),
           Row(
             children: [
               Expanded(
@@ -32,7 +41,8 @@ class Message extends StatelessWidget {
                     ? CrossAxisAlignment.end
                     : CrossAxisAlignment.start,
                   children: [
-                    SelectableText(
+                    // Only show sender when not grouping messages together
+                    groupingMessages ? Container() : SelectableText(
                       sender,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Consts.senderColor),
                     ),
@@ -50,7 +60,7 @@ class Message extends StatelessWidget {
                         : Consts.receivedColor,
                       ),
                       constraints: const BoxConstraints(maxWidth: 350),
-                      padding: Consts.messagePadding,
+                      padding: const EdgeInsets.all(16.0),
                       child: SelectableText(
                         message,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: sentByMe

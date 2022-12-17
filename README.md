@@ -24,10 +24,10 @@ A group-based chat application created by Pierce Martin
 * Show which users are active/not on the chat page
 * Account renaming
 * Notification bubble on groups icon when a group has new messages
+* Group together messages in similar times
 
 ### To Do
 * Username max length
-* Group together messages in similar times
 * Profile pictures & Group pictures
 * Replies (using gestures? :o)
 * Group deleting

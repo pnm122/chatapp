@@ -13,6 +13,7 @@ import 'package:chatapp/widgets/alert.dart';
 import 'package:chatapp/widgets/custom_app_bar.dart';
 import 'package:chatapp/widgets/groups.dart';
 import 'package:chatapp/widgets/message.dart';
+import 'package:chatapp/widgets/message_time_stamp.dart';
 import 'package:chatapp/widgets/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -367,29 +368,35 @@ class _ChatPageState extends State<ChatPage> {
             return false;
           },
           child: ListView.builder(
-              controller: _scrollController,
-              scrollDirection: Axis.vertical,
-              shrinkWrap: true,
-              itemCount: snapshot.data.docs.length + 1,
-              itemBuilder: (context, index) {
-                if(index == snapshot.data.docs.length) {
-                  return const SizedBox(height: 70);
-                }
-                return snapshot.data.docs[index]["isAlert"] 
-                  ? Alert(
-                    sender: snapshot.data.docs[index]["sender"],
-                    message: snapshot.data.docs[index]["message"],
-                    timeStamp: snapshot.data.docs[index]["timeStamp"],
-                  ) 
-                  : Message(
-                    sender: snapshot.data.docs[index]["sender"],
-                    sentByMe: snapshot.data.docs[index]["senderID"] == FirebaseAuth.instance.currentUser!.uid,
-                    message: snapshot.data.docs[index]["message"],
-                    timeStamp: snapshot.data.docs[index]["timeStamp"],
-                    currentDisplayName: loggedInDisplayName,
-                  );
-              },
-            ),
+            controller: _scrollController,
+            scrollDirection: Axis.vertical,
+            shrinkWrap: true,
+            itemCount: snapshot.data.docs.length + 1,
+            itemBuilder: (context, index) {
+              if(index == snapshot.data.docs.length) {
+                return const SizedBox(height: 86);
+              }
+              return Column(
+                children: [
+                  snapshot.data.docs[index]["isAlert"] 
+                    ? Alert(
+                      sender: snapshot.data.docs[index]["sender"],
+                      message: snapshot.data.docs[index]["message"],
+                      timeStamp: snapshot.data.docs[index]["timeStamp"],
+                    ) 
+                    : Message(
+                      sender: snapshot.data.docs[index]["sender"],
+                      lastMessageSender: index > 0 ? snapshot.data.docs[index - 1]["sender"] : "",
+                      sentByMe: snapshot.data.docs[index]["senderID"] == FirebaseAuth.instance.currentUser!.uid,
+                      message: snapshot.data.docs[index]["message"],
+                      timeStamp: snapshot.data.docs[index]["timeStamp"],
+                      lastMessageTimeStamp: index > 0 ? snapshot.data.docs[index - 1]["timeStamp"] : 0,
+                      currentDisplayName: loggedInDisplayName,
+                    ),
+                ],
+              );
+            },
+          ),
         )
         : Container();
       },
