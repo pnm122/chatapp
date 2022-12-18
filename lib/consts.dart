@@ -32,6 +32,9 @@ class Consts {
   static const Color inputBackgroundColor = Color.fromARGB(20, 0, 0, 0);
   static const EdgeInsets inputPadding = EdgeInsets.symmetric(vertical:8.0, horizontal: 12.0);
 
+  static const Color gradientEndColor = Color.fromARGB(255, 61, 129, 146);
+  static const Color secondaryButtonColor = Color.fromARGB(255, 38, 41, 87);
+
   static const double showScrollButtonHeight = 300.0;
 
   static const double cutoffWidth = 700.0;

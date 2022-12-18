@@ -35,7 +35,7 @@ class MainPage extends StatelessWidget {
 
         TextEditingController _controller = TextEditingController();
 
-        pushPopUp(context, Container(
+        pushSpecialScreen(context, Container(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
@@ -66,7 +66,7 @@ class MainPage extends StatelessWidget {
               ),
             ],
           )
-        ), "Create A Username", false);
+        ), "Create A Username");
       });
     });
 

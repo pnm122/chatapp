@@ -34,11 +34,11 @@ class _GroupsState extends State<Groups> {
         actions: [
           Padding(
             padding: Consts.appBarIconPadding,
-            child: const ActionButton(defaultIcon: Icons.group_add_outlined, hoverIcon: Icons.group_add, popUpWidget: JoinGroupPopUp(), title: "Join Group"),
+            child: const ActionButton(defaultIcon: Icons.group_add_outlined, hoverIcon: Icons.group_add, page: JoinGroupScreen(), title: "Join Group"),
           ),
           Padding(
             padding: Consts.appBarIconPadding,
-            child: const ActionButton(defaultIcon: Icons.create_outlined, hoverIcon: Icons.create, popUpWidget: CreateGroupPopUp(), title: "Create Group"),
+            child: const ActionButton(defaultIcon: Icons.create_outlined, hoverIcon: Icons.create, page: CreateGroupScreen(), title: "Create Group"),
           ),
           const Padding(padding: EdgeInsets.all(4.0)),
         ]
@@ -100,10 +100,10 @@ class _GroupsState extends State<Groups> {
 }
 
 class ActionButton extends StatefulWidget {
-  const ActionButton({super.key, required this.defaultIcon, required this.hoverIcon, required this.popUpWidget, required this.title});
+  const ActionButton({super.key, required this.defaultIcon, required this.hoverIcon, required this.page, required this.title});
   final IconData defaultIcon;
   final IconData hoverIcon;
-  final Widget popUpWidget;
+  final Widget page;
   final String title;
 
   @override
@@ -124,7 +124,7 @@ class _ActionButtonState extends State<ActionButton> {
           });
         },
         onTap: () {
-          pushPopUp(context, widget.popUpWidget, widget.title, true);
+          pushSpecialScreen(context, widget.page, widget.title);
         },
         child: Icon(
           hovering ? widget.hoverIcon : widget.defaultIcon,
@@ -408,7 +408,7 @@ class _NoGroupsJoinGroupButtonState extends State<NoGroupsJoinGroupButton> {
         });
       },
       onTap: () {
-        pushPopUp(context, const JoinGroupPopUp(), "Join Group", true);
+        pushSpecialScreen(context, const JoinGroupScreen(), "Join a Group");
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -429,14 +429,14 @@ class _NoGroupsJoinGroupButtonState extends State<NoGroupsJoinGroupButton> {
   }
 }
 
-class JoinGroupPopUp extends StatefulWidget {
-  const JoinGroupPopUp({super.key});
+class JoinGroupScreen extends StatefulWidget {
+  const JoinGroupScreen({super.key});
 
   @override
-  State<JoinGroupPopUp> createState() => _JoinGroupPopUpState();
+  State<JoinGroupScreen> createState() => _JoinGroupScreenState();
 }
 
-class _JoinGroupPopUpState extends State<JoinGroupPopUp> {
+class _JoinGroupScreenState extends State<JoinGroupScreen> {
   final TextEditingController _controller = TextEditingController();
 
   @override
@@ -447,8 +447,7 @@ class _JoinGroupPopUpState extends State<JoinGroupPopUp> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
+    return Center(
       child: Column(
         children: [
           TextFormField(
@@ -501,7 +500,7 @@ class _NoGroupsCreateGroupButtonState extends State<NoGroupsCreateGroupButton> {
         });
       },
       onTap: () {
-        pushPopUp(context, const CreateGroupPopUp(), "Create Group", true);
+        pushSpecialScreen(context, const CreateGroupScreen(), "Create a Group");
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -522,14 +521,14 @@ class _NoGroupsCreateGroupButtonState extends State<NoGroupsCreateGroupButton> {
   }
 }
 
-class CreateGroupPopUp extends StatefulWidget {
-  const CreateGroupPopUp({super.key});
+class CreateGroupScreen extends StatefulWidget {
+  const CreateGroupScreen({super.key});
 
   @override
-  State<CreateGroupPopUp> createState() => _CreateGroupPopUpState();
+  State<CreateGroupScreen> createState() => _CreateGroupScreenState();
 }
 
-class _CreateGroupPopUpState extends State<CreateGroupPopUp> {
+class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final TextEditingController _controller = TextEditingController();
   String abbreviation = "G";
 
@@ -553,44 +552,81 @@ class _CreateGroupPopUpState extends State<CreateGroupPopUp> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
+    return Center(
       child: Column(
         children: [
-          Center(
-            child: CircleAvatar(
-              backgroundColor: const Color.fromARGB(255, 193, 193, 193),
-              foregroundColor: Colors.black,
-              radius: 45,
-              child: Text(abbreviation, style: Theme.of(context).textTheme.headline4)
+          Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color.fromARGB(255, 209, 242, 226),
+              border: Border.all(
+                color: Colors.white,
+                width: 6,
+              ),
+              boxShadow: const [
+                BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(2, 4))
+              ]
             ),
+            child: Center(
+              child: Text(
+                abbreviation,
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Consts.secondaryButtonColor),
+              ),
+            )
+          ),
+          const SizedBox(height: 16),
+          // Title of the field input
+          Text(
+            "Name", 
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
           ),
           TextFormField(
             maxLength: Consts.maxGroupNameLength,
             textAlign: TextAlign.center,
             controller: _controller,
-            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700, color: Colors.black45),
+            cursorColor: Colors.white,
+            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
             decoration: const InputDecoration(
               hintText: "Give your group a name...",
+              hintStyle: TextStyle(color: Colors.white70),
               border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(vertical: 8.0),
+              isDense: true,
+              counterText: "",
             ),
-            minLines: 1,
-            maxLines: 2,
           ),
 
-          const SizedBox(height: 16.0),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                "${_controller.text.length}/${Consts.maxGroupNameLength}",
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white70),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 20.0),
 
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               minimumSize: const Size.fromHeight(50),
+              disabledBackgroundColor: Colors.white70,
+              backgroundColor: Colors.white,
             ),
-            onPressed: () {
-              if(_controller.text.isNotEmpty) {
-                DatabaseService().createGroup(_controller.text);
-                Navigator.pop(context);
-              }
+            onPressed: _controller.text.isEmpty ? null : () {
+              DatabaseService().createGroup(_controller.text);
+              Navigator.pop(context);
             },
-            child: const Text("Create group"),
+            child: Text(
+              "Create group",
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: _controller.text.isEmpty ? Colors.black54 : Consts.secondaryButtonColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),
