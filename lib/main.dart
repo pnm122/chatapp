@@ -21,7 +21,7 @@ void main() async {
     ),
   );
 
-  FirebaseAuth.instance.setPersistence(Persistence.NONE);
+  FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
 
   runApp(const MyApp());
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chatapp/pages/chat_page.dart';
 import 'package:chatapp/pages/login_page.dart';
 import 'package:chatapp/pages/main_page.dart';
@@ -11,18 +13,25 @@ import 'package:provider/provider.dart';
 import 'dart:html' as html;
 
 class MainWrapper extends StatelessWidget {
-  MainWrapper({super.key});
+  const MainWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {
+    bool active = true;
+
     html.window.onBeforeUnload.listen((event) async {
+      active = false;
       await DatabaseService().setInactive();
     });
-    html.window.onBlur.listen((event) async {
-      await DatabaseService().setInactive();
+    html.window.onBlur.listen((event) {
+      active = false;
+      InactiveTimer.set(() async { await DatabaseService().setInactive(); });
     });
-    html.window.onFocus.listen((event) async {
-      await DatabaseService().setActive();
+    html.window.onFocus.listen((event) {
+      InactiveTimer.cancel();
+      if(!active) {
+        DatabaseService().setActive();
+      }
     });
     return Scaffold(
       body: StreamBuilder(
@@ -54,5 +63,21 @@ class MainPageViewModelWrapper extends StatelessWidget {
       create: (context) => viewModel,
       child: MainPage(viewModel: viewModel),
     );
+  }
+}
+
+class InactiveTimer {
+  static Timer? t;
+  static set(void Function() callback) {
+    // allow only one timer at a time
+    if(t != null && t!.isActive) return;
+    t = Timer(
+      const Duration(minutes: 3),
+      callback
+    );
+  }
+  static cancel() {
+    if(t == null) return;
+    if(t!.isActive) t!.cancel();
   }
 }

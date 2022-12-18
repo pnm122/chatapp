@@ -25,11 +25,13 @@ A group-based chat application created by Pierce Martin
 * Account renaming
 * Notification bubble on groups icon when a group has new messages
 * Group together messages in similar times
+* Inactive timer
 
 ### To Do
 * Username max length
-* Profile pictures & Group pictures
+* Better appearance for popups
 * Replies (using gestures? :o)
+* Profile pictures & Group pictures
 * Group deleting
 * Version info page
 * Pin messages
@@ -39,10 +41,6 @@ A group-based chat application created by Pierce Martin
 * Notification alert
 
 ### Known issues
-* AuthStateChanges not updating for some reason after signing out
-* Scroll to bottom on new message is a little buggy? Doesn't always go all the way to the bottom
-* setState() being called after widget destruction in (i think) groups.dart
 * Firebase permissions error on log out, not sure where it's coming from
-* (fixed?) setState() called after dispose when in smaller view 
-* Unhandled Google errors
+* Setting inactive on log out didn't work once but couldn't reproduce. Happened right after first sign in
   

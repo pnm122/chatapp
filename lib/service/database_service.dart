@@ -148,10 +148,12 @@ class DatabaseService {
   }
 
   Future setInactive() async {
+    print(verify());
     if(!verify()) return;
 
     final user = FirebaseAuth.instance.currentUser;
     if(user == null) return;
+    print("Working");
     await userCollection.doc(user.uid).update({
       "active": false,
     });
