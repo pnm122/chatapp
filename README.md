@@ -2,7 +2,11 @@
 
 A group-based chat application created by Pierce Martin
 
-## Version 2.0.0
+## Version 2.1.0 (In Progress)
+* TODO: Username max length
+* TODO: Better appearance for popups
+
+## Version 2.0.0 (Current)
 
 ### Completed
 * Don't allow users to sign in as another past user (username and password, Google auth)
@@ -27,12 +31,11 @@ A group-based chat application created by Pierce Martin
 * Group together messages in similar times
 * Inactive timer
 
-### To Do
-* Username max length
-* Better appearance for popups
+### Eventually planned
 * Replies (using gestures? :o)
 * Profile pictures & Group pictures
 * Group deleting
+* Reactions to chats
 * Version info page
 * Pin messages
 * Attachments
