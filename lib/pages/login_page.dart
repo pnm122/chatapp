@@ -157,6 +157,7 @@ class _LoginPageState extends State<LoginPage> {
                                   DatabaseService().setActive();
                                 }, onError: (e) { showError(e); }) 
                                 : await provider.createAccountWithEmailAndPass(userEmail, userPass).then((result) {
+                                  DatabaseService().createUser(result);
                                   DatabaseService().setActive();
                                 }, onError: (e) { showError(e); });
                               }
