@@ -1,0 +1,23 @@
+{
+  "name": "chatapp",
+  "version": "2.0.0",
+  "description": "A group-based chat application created by Pierce Martin",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pnm122/chatapp.git"
+  },
+  "author": "Pierce Martin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pnm122/chatapp/issues"
+  },
+  "homepage": "https://github.com/pnm122/chatapp#readme"
+}
