@@ -2,11 +2,16 @@
 
 A group-based chat application created by Pierce Martin
 
-## Version 2.1.0 (In Progress)
+## Version 2.1.2 (In Progress)
 
 * TODO: Username max length
 * TODO: Better appearance for popups
 * TODO: Padding on login/register page
+* FIX: Small screen/phone two back buttons on info page
+* FIX: Font weights weird on my phone? Maybe just need a new font tbh
+
+## Version 2.1.0
+
 * FIX: Removed accidental infinite loops on calling database + optimized other calls
     1. Moved get current group's members to viewmodel. It was called inside a stateful widget, which was called on every rebuild
     2. Only call read all messages when switching into a group, switching out, logging out, closing the window. Was previously called on every chat message
@@ -15,8 +20,6 @@ A group-based chat application created by Pierce Martin
     4. Moved getNumberOfNewMessages() + setState call into initState. It was inside the GroupTile build function; same problem as 3
     5. TODO: Reduce usage of getCurrentUserName by storing it in the viewmodel after calling once
     6. Forgot to set active to true when calling setActive, so it got called like 20 times lol
-* FIX: Small screen/phone two back buttons on info page
-* FIX: Font weights weird on my phone? Maybe just need a new font tbh
 
 ## Version 2.0.0 (Current)
 
