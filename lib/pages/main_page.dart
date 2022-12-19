@@ -5,18 +5,13 @@ import 'package:chatapp/pages/chat_page.dart';
 import 'package:chatapp/pages/info_page.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/viewmodels/main_view_model.dart';
-import 'package:chatapp/widgets/groups.dart';
-import 'package:chatapp/widgets/custom_app_bar.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/widgets/widgets.dart';
-import 'package:chatapp/pages/login_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import 'dart:html' as html;
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key, required this.viewModel});
@@ -24,14 +19,37 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var provider = Provider.of<AuthService>(context, listen: false);
+    bool active = true;
+    String selectedGroupId = context.read<MainViewModel>().selectedGroupId;
 
-    var selectedGroupName = context.watch<MainViewModel>().selectedGroupName;
+    html.window.onBeforeUnload.listen((event) async {
+      active = false;
+      await DatabaseService().setInactive();
+      // seems to never make it here :(
+      await DatabaseService().readAllMessages(selectedGroupId);
+    });
+    html.window.onBlur.listen((event) {
+      active = false;
+      InactiveTimer.set(() { 
+        DatabaseService().setInactive(); 
+      });
+    });
+    html.window.onFocus.listen((event) {
+      InactiveTimer.cancel();
+      if(!active) {
+        active = true;
+        DatabaseService().setActive();
+      }
+    });
 
-    // Ask the user to create a username after creating an account (displayName is only empty right after making an account)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       DatabaseService().getCurrentUserName().then((value) {
+        // set current username here so we don't have to keep reading from the database every time we need it
+        context.read<MainViewModel>().currentUserName = value;
+        
         if(value.isNotEmpty) return;
+
+        // Ask the user to create a username after creating an account (displayName is only empty right after making an account)
 
         TextEditingController _controller = TextEditingController();
 
@@ -58,6 +76,7 @@ class MainPage extends StatelessWidget {
                 onPressed: () {
                   if(_controller.text.isNotEmpty) {
                     DatabaseService().setDisplayName(_controller.text);
+                    context.read<MainViewModel>().currentUserName = _controller.text;
                     _controller.dispose();
                     Navigator.pop(context);
                   }

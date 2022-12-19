@@ -37,6 +37,7 @@ class _ChatPageState extends State<ChatPage> {
   // List of messages in the database
   // DatabaseService().getMessages() returns a listener to it so it automatically updates and rebuilds widgets when the messages change
   Stream<QuerySnapshot<Object?>>? messages;
+  Stream? groupMembers;
   String groupID = "";
   String loggedInDisplayName = "";
 
@@ -62,6 +63,7 @@ class _ChatPageState extends State<ChatPage> {
     String groupName = context.watch<MainViewModel>().selectedGroupName;
     groupID = context.watch<MainViewModel>().selectedGroupId;
     messages = context.watch<MainViewModel>().messages as Stream<QuerySnapshot<Object?>>?;
+    groupMembers = context.watch<MainViewModel>().selectedGroupMembers;
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -166,7 +168,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
             Expanded(
               child: StreamBuilder(
-                stream: DatabaseService().getGroupUsers(context.read<MainViewModel>().selectedGroupId),
+                stream: groupMembers,
                 builder: (context, snapshot) {
                   if(snapshot.hasData) {
                     return Container(
@@ -422,7 +424,7 @@ class _ChatPageState extends State<ChatPage> {
       Map<String, dynamic> messageMap = {
         "isAlert": false,
         "message": _messageController.text,
-        "sender": await DatabaseService().getCurrentUserName(),
+        "sender": context.read<MainViewModel>().currentUserName,
         "senderID": FirebaseAuth.instance.currentUser!.uid,
         "timeStamp": Timestamp.now().millisecondsSinceEpoch
       };

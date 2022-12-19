@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chatapp/consts.dart';
 import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/widgets/custom_app_bar.dart';
@@ -71,6 +73,22 @@ void pushSpecialScreen(context, page, String title) {
       },
     ),
   );
+}
+
+class InactiveTimer {
+  static Timer? t;
+  static set(void Function() callback) {
+    // allow only one timer at a time
+    if(t != null && t!.isActive) return;
+    t = Timer(
+      const Duration(minutes: 3),
+      callback
+    );
+  }
+  static cancel() {
+    if(t == null) return;
+    if(t!.isActive) t!.cancel();
+  }
 }
 
 class ShimmerPlaceholder extends StatefulWidget {

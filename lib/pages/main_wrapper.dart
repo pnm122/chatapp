@@ -17,22 +17,6 @@ class MainWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool active = true;
-
-    html.window.onBeforeUnload.listen((event) async {
-      active = false;
-      await DatabaseService().setInactive();
-    });
-    html.window.onBlur.listen((event) {
-      active = false;
-      InactiveTimer.set(() async { await DatabaseService().setInactive(); });
-    });
-    html.window.onFocus.listen((event) {
-      InactiveTimer.cancel();
-      if(!active) {
-        DatabaseService().setActive();
-      }
-    });
     return Scaffold(
       body: StreamBuilder(
         // listen for changes on authentication state, and decide what to show based on that
@@ -63,21 +47,5 @@ class MainPageViewModelWrapper extends StatelessWidget {
       create: (context) => viewModel,
       child: MainPage(viewModel: viewModel),
     );
-  }
-}
-
-class InactiveTimer {
-  static Timer? t;
-  static set(void Function() callback) {
-    // allow only one timer at a time
-    if(t != null && t!.isActive) return;
-    t = Timer(
-      const Duration(minutes: 3),
-      callback
-    );
-  }
-  static cancel() {
-    if(t == null) return;
-    if(t!.isActive) t!.cancel();
   }
 }

@@ -198,36 +198,23 @@ class GroupTile extends StatefulWidget {
 
 class _GroupTileState extends State<GroupTile> {
   bool hovering = false;
-  int numNewMessages = 0;
-  bool _disposed = false;
-
+  Stream? numMessagesReadStream; 
+  
   @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
-  }
-
-  @override
-  void setState(VoidCallback fn) {
-    if(_disposed) return;
-    super.setState(fn);
+  initState() {
+    DatabaseService().getMessagesReadInGroup(widget.info["id"]).then((value) {
+      setState(() {
+        numMessagesReadStream = value;
+      });
+    });
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    try {
-      DatabaseService().getNumberOfNewMessages(widget.info["id"]).then((value) {
-        setState(() {
-          numNewMessages = value;
-        });
-      });
-    } catch (e) {
-      // On creating a new group, this throws an error (Expected a value of type 'String', but got one of type 'Null')
-      // No idea how to fix this
-    }
-
     String selectedID = context.watch<MainViewModel>().selectedGroupId;
     bool selected = selectedID == widget.info["id"];
+    int numMessages = widget.info["numMessages"];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
@@ -235,9 +222,14 @@ class _GroupTileState extends State<GroupTile> {
         onTap: () {
           // Don't need to load a new group page if it's already selected
           if(!selected) {
+            // read all messages of the current group if it's selected
+            String beforeSwitchGroupId = context.read<MainViewModel>().selectedGroupId;
+            if(beforeSwitchGroupId.isNotEmpty) DatabaseService().readAllMessages(beforeSwitchGroupId);
+
             context.read<MainViewModel>().selectedGroupId = widget.info["id"];
             context.read<MainViewModel>().selectedGroupName = widget.info["name"];
-            context.read<MainViewModel>().selectedGroupMembers = widget.info["members"];
+            context.read<MainViewModel>().setSelectedGroupMembers(widget.info["members"]);
+            // set user's read messages to all messages in the newly selected group
             DatabaseService().readAllMessages(widget.info["id"]);
 
             // For when the groups page appears via button
@@ -350,7 +342,16 @@ class _GroupTileState extends State<GroupTile> {
                                   ),
                               ),
                             ),
-                          NewMessagesBubble(numNewMessages: numNewMessages),
+                          StreamBuilder(
+                            stream: numMessagesReadStream,
+                            builder: (context, snapshot) {
+                              if(snapshot.connectionState == ConnectionState.active) {
+                                return NewMessagesBubble(
+                                  numNewMessages: selected ? 0 : numMessages - snapshot.data.data()["numMessages"] as int
+                                );
+                              } else { return Container(); }
+                            }
+                          ),
                         ],
                       )
                     ],
