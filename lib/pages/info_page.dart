@@ -36,7 +36,7 @@ class _InfoPageState extends State<InfoPage> {
           title: StreamBuilder(
             stream: userInfo,
             builder: (context, snapshot) {
-              if(snapshot.connectionState == ConnectionState.active) {
+              if(snapshot.connectionState == ConnectionState.active && snapshot.hasData) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -120,6 +120,9 @@ class _InfoPageState extends State<InfoPage> {
               padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: Consts.sideMargin),
               child: TextButton(
                 onPressed: () {
+                  // Pop off groups page on small screen where groups is separate
+                  if(MediaQuery.of(context).size.width < Consts.cutoffWidth) Navigator.pop(context);
+                  
                   DatabaseService().setInactive();
                   // Read all messages from the group on log out
                   if(context.read<MainViewModel>().selectedGroupId != "") DatabaseService().readAllMessages(context.read<MainViewModel>().selectedGroupId);

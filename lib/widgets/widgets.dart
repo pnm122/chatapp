@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:chatapp/consts.dart';
 import 'package:chatapp/helper/helper_functions.dart';
+import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 
@@ -19,7 +20,7 @@ void pushScreenReplace(context, page) {
   );
 }
 
-void pushSpecialScreen(context, page, String title) {
+void pushSpecialScreen(context, page, String title, bool closeable) {
   double maxWidth = 300;
   Navigator.push(
     context,
@@ -36,13 +37,13 @@ void pushSpecialScreen(context, page, String title) {
           child: Scaffold(
             backgroundColor: Colors.transparent,
             appBar: CustomAppBar(
-              leading: IconButton(
+              leading: closeable ? IconButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                icon: Icon(Icons.arrow_back),
+                icon: const Icon(Icons.arrow_back),
                 color: Colors.white,
-              ),
+              ) : Container(),
               title: Text(
                 title,
                 style: Theme.of(context).textTheme.headline6?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
@@ -73,6 +74,95 @@ void pushSpecialScreen(context, page, String title) {
       },
     ),
   );
+}
+
+class SpecialScreenFormField extends StatelessWidget {
+  const SpecialScreenFormField({super.key, required this.controller, required this.title, required this.hintText, this.maxLength, this.helpText});
+  final TextEditingController controller;
+  final String title;
+  final String hintText;
+  final int? maxLength;
+  final String? helpText;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              title, 
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
+            ),
+            helpText != null ? const SizedBox(width: 4) : Container(),
+            helpText != null ? Tooltip(
+              preferBelow: false,
+              decoration: const BoxDecoration(color: Consts.toolTipColor),
+              message: helpText,
+              child: const Icon(
+                Icons.info_outline,
+                size: 16,
+                color: Colors.white,
+              ),
+            ) : Container(),
+          ],
+        ),
+        TextFormField(
+          textAlign: TextAlign.center,
+          controller: controller,
+          cursorColor: Colors.white,
+          maxLength: maxLength,
+          style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: const TextStyle(color: Colors.white70),
+            enabledBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(width: 2, color: Colors.white70)
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderSide: BorderSide(width: 2, color: Colors.white)
+            ),
+            contentPadding: const EdgeInsets.symmetric(vertical: 12.0),
+            isDense: true,
+            counterStyle: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white70),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class SpecialScreenButton extends StatelessWidget {
+  const SpecialScreenButton({super.key, required this.onPressed, required this.title, required this.controller});
+  final VoidCallback? onPressed;
+  final String title;
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 16.0),
+
+        ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size.fromHeight(50),
+            disabledBackgroundColor: Colors.white70,
+            backgroundColor: Colors.white,
+          ),
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: controller.text.isEmpty ? Colors.black54 : Consts.secondaryButtonColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class InactiveTimer {

@@ -50,42 +50,7 @@ class MainPage extends StatelessWidget {
         if(value.isNotEmpty) return;
 
         // Ask the user to create a username after creating an account (displayName is only empty right after making an account)
-
-        TextEditingController _controller = TextEditingController();
-
-        pushSpecialScreen(context, Container(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              TextFormField(
-                textAlign: TextAlign.center,
-                controller: _controller,
-                style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
-                decoration: const InputDecoration(
-                  hintText: "Give yourself a name...",
-                  border: InputBorder.none,
-                ),
-              ),
-
-              const SizedBox(height: 16.0),
-
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                ),
-                onPressed: () {
-                  if(_controller.text.isNotEmpty) {
-                    DatabaseService().setDisplayName(_controller.text);
-                    context.read<MainViewModel>().currentUserName = _controller.text;
-                    _controller.dispose();
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text("Let's chat!"),
-              ),
-            ],
-          )
-        ), "Create A Username");
+        pushSpecialScreen(context, const SetDisplayNameScreen(), "Create A Display Name", false);
       });
     });
 
@@ -98,6 +63,53 @@ class MainPage extends StatelessWidget {
         // Use expanded so it doesn't overflow (bc the other row element is a sizedbox)
         Expanded(
           child: ChatPage(viewModel: viewModel),
+        ),
+      ],
+    );
+  }
+}
+
+class SetDisplayNameScreen extends StatefulWidget {
+  const SetDisplayNameScreen({super.key});
+
+  @override
+  State<SetDisplayNameScreen> createState() => _SetDisplayNameScreenState();
+}
+
+class _SetDisplayNameScreenState extends State<SetDisplayNameScreen> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    _controller.addListener(textChanged);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+    _controller.removeListener(textChanged);
+  }
+
+  textChanged() {
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        
+        SpecialScreenFormField(controller: _controller, title: "Name", hintText: "Give yourself a name..."),
+
+        SpecialScreenButton(
+          onPressed: _controller.text.isEmpty ? null : () {
+            DatabaseService().setDisplayName(_controller.text);
+            Navigator.pop(context);
+          },
+          controller: _controller,
+          title: "Start Chatting!",
         ),
       ],
     );

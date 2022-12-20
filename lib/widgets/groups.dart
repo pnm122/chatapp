@@ -55,7 +55,7 @@ class _GroupsState extends State<Groups> {
               },
             );
           }
-          if(snapshot.connectionState == ConnectionState.active) {
+          if(snapshot.connectionState == ConnectionState.active && snapshot.hasData) {
             if(snapshot.data.length == 0) {
               return Center(
                 child: Column(
@@ -111,7 +111,7 @@ class _ActionButtonState extends State<ActionButton> {
           });
         },
         onTap: () {
-          pushSpecialScreen(context, widget.page, widget.title);
+          pushSpecialScreen(context, widget.page, widget.title, true);
         },
         child: Icon(
           hovering ? widget.hoverIcon : widget.defaultIcon,
@@ -373,7 +373,7 @@ class _NoGroupsJoinGroupButtonState extends State<NoGroupsJoinGroupButton> {
         });
       },
       onTap: () {
-        pushSpecialScreen(context, const JoinGroupScreen(), "Join a Group");
+        pushSpecialScreen(context, const JoinGroupScreen(), "Join a Group", true);
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -425,53 +425,13 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "ID", 
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
-            ),
-            const SizedBox(width: 4),
-            const Tooltip(
-              preferBelow: false,
-              decoration: BoxDecoration(color: Consts.toolTipColor),
-              message: "Users who create a group can copy the group ID from the title above the chat room. Enter this ID to join that group!",
-              child: Icon(
-                Icons.info_outline,
-                size: 16,
-                color: Colors.white,
-              ),
-            )
-          ],
+        SpecialScreenFormField(
+          controller: _controller, 
+          title: "ID", 
+          hintText: "Enter the group ID...", 
+          helpText: "Users who create a group can copy the group ID from the title above the chat room. Enter this ID to join that group!"
         ),
-        TextFormField(
-          textAlign: TextAlign.center,
-          controller: _controller,
-          cursorColor: Colors.white,
-          style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: "Enter the group ID...",
-            hintStyle: TextStyle(color: Colors.white70),
-            enabledBorder: UnderlineInputBorder(
-              borderSide: BorderSide(width: 2, color: Colors.white70)
-            ),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(width: 2, color: Colors.white)
-            ),
-            contentPadding: EdgeInsets.symmetric(vertical: 12.0),
-            isDense: true,
-          ),
-        ),
-
-        const SizedBox(height: 16.0),
-
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size.fromHeight(50),
-            disabledBackgroundColor: Colors.white70,
-            backgroundColor: Colors.white,
-          ),
+        SpecialScreenButton(
           onPressed: _controller.text.isEmpty ? null : () {
             Navigator.pop(context);
             DatabaseService().joinGroup(_controller.text).then((success) {
@@ -482,14 +442,9 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
                 )
               );
             });
-          },
-          child: Text(
-            "Join Group",
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: _controller.text.isEmpty ? Colors.black54 : Consts.secondaryButtonColor,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          }, 
+          title: "Join Group", 
+          controller: _controller
         ),
       ],
     );
@@ -516,7 +471,7 @@ class _NoGroupsCreateGroupButtonState extends State<NoGroupsCreateGroupButton> {
         });
       },
       onTap: () {
-        pushSpecialScreen(context, const CreateGroupScreen(), "Create a Group");
+        pushSpecialScreen(context, const CreateGroupScreen(), "Create a Group", true);
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -594,63 +549,21 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
           ),
           const SizedBox(height: 16),
           // Title of the field input
-          Text(
-            "Name", 
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
-          ),
-          TextFormField(
+          SpecialScreenFormField(
+            controller: _controller, 
+            title: "Name", 
             maxLength: Consts.maxGroupNameLength,
-            textAlign: TextAlign.center,
-            controller: _controller,
-            cursorColor: Colors.white,
-            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
-            decoration: const InputDecoration(
-              hintText: "Give your group a name...",
-              hintStyle: TextStyle(color: Colors.white70),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(width: 2, color: Colors.white70)
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(width: 2, color: Colors.white)
-              ),
-              contentPadding: EdgeInsets.symmetric(vertical: 12.0),
-              isDense: true,
-              counterText: "",
-            ),
+            hintText: "Give your group a name...",
           ),
 
-          const SizedBox(height: 4.0),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                "${_controller.text.length}/${Consts.maxGroupNameLength}",
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white70),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20.0),
-
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-              disabledBackgroundColor: Colors.white70,
-              backgroundColor: Colors.white,
-            ),
+          SpecialScreenButton(
             onPressed: _controller.text.isEmpty ? null : () {
               String name = _controller.text;
               Navigator.pop(context);
               DatabaseService().createGroup(name);
             },
-            child: Text(
-              "Create group",
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: _controller.text.isEmpty ? Colors.black54 : Consts.secondaryButtonColor,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            title: "Create group", 
+            controller: _controller
           ),
         ],
       ),

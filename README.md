@@ -5,7 +5,7 @@ A group-based chat application created by Pierce Martin
 ## Version 2.1.2 (In Progress)
 
 * TODO: Username max length
-* TODO: Better appearance for popups
+* Better appearance for popups
 * TODO: Padding on login/register page
 * FIX: Small screen/phone two back buttons on info page
 * FIX: Font weights weird on my phone? Maybe just need a new font tbh
@@ -22,8 +22,6 @@ A group-based chat application created by Pierce Martin
     6. Forgot to set active to true when calling setActive, so it got called like 20 times lol
 
 ## Version 2.0.0 (Current)
-
-### Completed
 
 * Don't allow users to sign in as another past user (username and password, Google auth)
 * Google authentication
@@ -58,6 +56,7 @@ A group-based chat application created by Pierce Martin
 * Attachments
 * Find a way to constrain the size of groups on small screen size
 * Dark mode switiching support
+* Group permission settings (changing name, deleting permissions)
 * Notification alert
 
 ### Known issues
