@@ -101,7 +101,12 @@ class _SetDisplayNameScreenState extends State<SetDisplayNameScreen> {
     return Column(
       children: [
         
-        SpecialScreenFormField(controller: _controller, title: "Name", hintText: "Give yourself a name..."),
+        SpecialScreenFormField(
+          controller: _controller, 
+          title: "Name", 
+          maxLength: Consts.maxDisplayNameLength,
+          hintText: "Give yourself a name..."
+        ),
 
         SpecialScreenButton(
           onPressed: _controller.text.isEmpty ? null : () {

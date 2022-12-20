@@ -4,11 +4,12 @@ A group-based chat application created by Pierce Martin
 
 ## Version 2.1.2 (In Progress)
 
-* TODO: Username max length
+* Username max length
 * Better appearance for popups
-* TODO: Padding on login/register page
+* Padding on login/register page
 * FIX: Small screen/phone two back buttons on info page
-* FIX: Font weights weird on my phone? Maybe just need a new font tbh
+* ATTEMPT FIX: Font weights too light on my phone: flutter build web --web-renderer canvaskit
+* FIX: Error when creating a group on small screens
 
 ## Version 2.1.0
 
@@ -54,8 +55,8 @@ A group-based chat application created by Pierce Martin
 * Version info page
 * Pin messages
 * Attachments
-* Find a way to constrain the size of groups on small screen size
 * Dark mode switiching support
+* Redesign the group's users section to have better behavior
 * Group permission settings (changing name, deleting permissions)
 * Notification alert
 

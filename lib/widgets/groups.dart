@@ -26,6 +26,7 @@ class _GroupsState extends State<Groups> {
     return Scaffold(
       backgroundColor: Consts.foregroundColor,
       appBar: CustomAppBar(
+        automaticallyImplyLeading: false,
         height: 50,
         title: Text(
           "Your Groups",
@@ -74,11 +75,17 @@ class _GroupsState extends State<Groups> {
             return ListView.builder(
               itemCount: snapshot.data.length,
               itemBuilder: (context, index) {
-                return GroupTile(info: snapshot.data[index].data());
+                // Not sure why, but I need to check this condition when creating a group on the small layout,
+                // otherwise I get an error that something is null
+                if(snapshot.data[index] != null) {
+                  return GroupTile(info: snapshot.data[index].data());
+                } else {
+                  return const GroupTilePlaceholder();
+                }
               },
             );
           } else {
-            return const Center(child: Text("Error"));
+            return const Center(child: CircularProgressIndicator());
           }
         },
       ),
@@ -558,9 +565,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
           SpecialScreenButton(
             onPressed: _controller.text.isEmpty ? null : () {
-              String name = _controller.text;
+              DatabaseService().createGroup(_controller.text);
               Navigator.pop(context);
-              DatabaseService().createGroup(name);
             },
             title: "Create group", 
             controller: _controller

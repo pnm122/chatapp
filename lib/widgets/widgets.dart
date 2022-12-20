@@ -99,6 +99,7 @@ class SpecialScreenFormField extends StatelessWidget {
             helpText != null ? Tooltip(
               preferBelow: false,
               decoration: const BoxDecoration(color: Consts.toolTipColor),
+              margin: const EdgeInsets.symmetric(horizontal: 16.0),
               message: helpText,
               child: const Icon(
                 Icons.info_outline,
@@ -313,6 +314,36 @@ class UserBubble extends StatelessWidget {
           ],
         ),
       )
+    );
+  }
+}
+
+class UserList extends StatelessWidget {
+  const UserList({super.key, required this.stream});
+  final Stream? stream;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: StreamBuilder(
+        stream: stream,
+        builder: (context, snapshot) {
+          if(snapshot.hasData) {
+            return Container(
+              // Constraints = size of UserBubble
+              // Should be a temporary fix but I really don't know how to fix the userbubble expanding to height otherwise
+              constraints: const BoxConstraints(maxHeight: 56),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: snapshot.data.length,
+                itemBuilder: (context, index) {
+                  return UserBubble(userData: snapshot.data[index].data());
+                }
+              ),
+            );
+          } else { return Container(); }
+        },
+      ),
     );
   }
 }
