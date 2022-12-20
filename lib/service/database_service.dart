@@ -90,15 +90,15 @@ class DatabaseService {
     });
   }
 
-  // Not used yet but I'll definite use this for the user info page, so keep it here
   Stream<DocumentSnapshot>? getCurrentUserInfo() {
     if(!verify()) return null;
 
     //print("Getting current user info...");
 
-    // Use instead of HelperFunctions method to get current user ID?
+    
     String? uid = FirebaseAuth.instance.currentUser!.uid;
-    return userCollection.doc(uid).snapshots();
+    Stream<DocumentSnapshot>? snapshot = userCollection.doc(uid).snapshots();
+    return snapshot;
   }
 
   getCurrentUserName() async {

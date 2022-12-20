@@ -2,14 +2,23 @@
 
 A group-based chat application created by Pierce Martin
 
-## Version 2.1.2 (In Progress)
+## Version 2.1.3
+
+* TODO: Alerts for group creation, group renaming
+* Correct gaps between messages sent by different other users
+* Updated timestamp showing for messages > 1 min apart instead of > 5
+* BUG: New account has a displayName but when sending a message, the sender is empty
+* BUG: (Can't seem to replicate outside of deployed version) New messages not right in some circumstances
+* BUG: Creating groups on mobile breaks the UI?
+
+## Version 2.1.2 (Current)
 
 * Username max length
 * Better appearance for popups
 * Padding on login/register page
-* FIX: Small screen/phone two back buttons on info page
+* BUG FIXED: Small screen/phone two back buttons on info page
 * ATTEMPT FIX: Font weights too light on my phone: flutter build web --web-renderer canvaskit
-* FIX: Error when creating a group on small screens
+* BUG FIXED: Error when creating a group on small screens
 
 ## Version 2.1.0
 
@@ -22,7 +31,7 @@ A group-based chat application created by Pierce Martin
     5. TODO: Reduce usage of getCurrentUserName by storing it in the viewmodel after calling once
     6. Forgot to set active to true when calling setActive, so it got called like 20 times lol
 
-## Version 2.0.0 (Current)
+## Version 2.0.0
 
 * Don't allow users to sign in as another past user (username and password, Google auth)
 * Google authentication
@@ -59,10 +68,12 @@ A group-based chat application created by Pierce Martin
 * Redesign the group's users section to have better behavior
 * Group permission settings (changing name, deleting permissions)
 * Notification alert
+* Emoji keyboard, specifically for desktop
 
 ### Known issues
 
 * Firebase permissions error on log out, not sure where it's coming from
 * Setting inactive on log out didn't work once but couldn't reproduce. Happened right after first sign in
 * Reading all messages on window close doesn't work
+* Possible to create an account without creating database info, need a backup for this case
   

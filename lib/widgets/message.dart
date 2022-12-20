@@ -26,7 +26,7 @@ class Message extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 300,000 ms => 5 minutes
-    final bool showTimeStamp = timeStamp > lastMessageTimeStamp + 300000;
+    final bool showTimeStamp = timeStamp > lastMessageTimeStamp + 60000;
     final bool groupingMessages = !showTimeStamp && sender == lastMessageSender;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: Consts.sideMargin),
@@ -42,6 +42,7 @@ class Message extends StatelessWidget {
                     : CrossAxisAlignment.start,
                   children: [
                     // Only show sender when not grouping messages together
+                    groupingMessages ? Container() : const SizedBox(height: 4),
                     groupingMessages ? Container() : SelectableText(
                       sender,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Consts.senderColor),
