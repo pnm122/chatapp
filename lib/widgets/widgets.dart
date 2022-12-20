@@ -153,6 +153,31 @@ class _ShimmerPlaceholderState extends State<ShimmerPlaceholder> with SingleTick
   }
 }
 
+class NewMessagesBubble extends StatelessWidget {
+  const NewMessagesBubble({super.key, required this.numNewMessages});
+  final int numNewMessages;
+
+  @override
+  Widget build(BuildContext context) {
+    return numNewMessages > 0 ? Container(
+      width: 18,
+      height: 18,
+      decoration: const BoxDecoration(
+        color: Colors.red,
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Text(
+          numNewMessages > 9 ? "9+" : numNewMessages.toString(),
+          style: numNewMessages > 9 
+           ? const TextStyle(fontSize: 10, color: Colors.white)
+           : Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white),
+        ),
+      ),
+    ) : Container();
+  }
+}
+
 class UserBubble extends StatelessWidget {
   const UserBubble({super.key, required this.userData});
   final Map userData;

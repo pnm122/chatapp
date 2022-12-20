@@ -55,7 +55,7 @@ class _GroupsState extends State<Groups> {
               },
             );
           }
-          if(snapshot.hasData) {
+          if(snapshot.connectionState == ConnectionState.active) {
             if(snapshot.data.length == 0) {
               return Center(
                 child: Column(
@@ -78,20 +78,7 @@ class _GroupsState extends State<Groups> {
               },
             );
           } else {
-            // No groups for this user
-            return Center(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Text("You haven't joined any groups yet."),
-                  SizedBox(height: 5.0),
-                  NoGroupsJoinGroupButton(),
-                  SizedBox(height: 5.0),
-                  NoGroupsCreateGroupButton()
-                ]
-              )
-            );
+            return const Center(child: Text("Error"));
           }
         },
       ),
@@ -366,29 +353,6 @@ class _GroupTileState extends State<GroupTile> {
   }
 }
 
-class NewMessagesBubble extends StatelessWidget {
-  const NewMessagesBubble({super.key, required this.numNewMessages});
-  final int numNewMessages;
-
-  @override
-  Widget build(BuildContext context) {
-    return numNewMessages > 0 ? Container(
-      width: 18,
-      height: 18,
-      decoration: const BoxDecoration(
-        color: Colors.red,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          numNewMessages > 9 ? "9+" : numNewMessages.toString(),
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white),
-        ),
-      ),
-    ) : Container();
-  }
-}
-
 
 class NoGroupsJoinGroupButton extends StatefulWidget {
   const NoGroupsJoinGroupButton({super.key});
@@ -441,42 +405,93 @@ class _JoinGroupScreenState extends State<JoinGroupScreen> {
   final TextEditingController _controller = TextEditingController();
 
   @override
+  void initState() {
+    _controller.addListener(textChanged);
+    super.initState();
+  }
+
+  @override
   void dispose() {
     super.dispose();
     _controller.dispose();
+    _controller.removeListener(textChanged);
+  }
+
+  textChanged() {
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          TextFormField(
-            textAlign: TextAlign.center,
-            controller: _controller,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: Colors.black45),
-            decoration: const InputDecoration(
-              hintText: "Enter the group ID",
-              border: InputBorder.none,
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "ID", 
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
+            ),
+            const SizedBox(width: 4),
+            const Tooltip(
+              preferBelow: false,
+              decoration: BoxDecoration(color: Consts.toolTipColor),
+              message: "Users who create a group can copy the group ID from the title above the chat room. Enter this ID to join that group!",
+              child: Icon(
+                Icons.info_outline,
+                size: 16,
+                color: Colors.white,
+              ),
+            )
+          ],
+        ),
+        TextFormField(
+          textAlign: TextAlign.center,
+          controller: _controller,
+          cursorColor: Colors.white,
+          style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700, color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: "Enter the group ID...",
+            hintStyle: TextStyle(color: Colors.white70),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(width: 2, color: Colors.white70)
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(width: 2, color: Colors.white)
+            ),
+            contentPadding: EdgeInsets.symmetric(vertical: 12.0),
+            isDense: true,
+          ),
+        ),
+
+        const SizedBox(height: 16.0),
+
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            minimumSize: const Size.fromHeight(50),
+            disabledBackgroundColor: Colors.white70,
+            backgroundColor: Colors.white,
+          ),
+          onPressed: _controller.text.isEmpty ? null : () {
+            Navigator.pop(context);
+            DatabaseService().joinGroup(_controller.text).then((success) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(success ? "Succesfully joined group" : "Failed to join group. The ID was probably invalid"),
+                  backgroundColor: success ? Consts.successColor : Colors.red,
+                )
+              );
+            });
+          },
+          child: Text(
+            "Join Group",
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: _controller.text.isEmpty ? Colors.black54 : Consts.secondaryButtonColor,
+              fontWeight: FontWeight.w700,
             ),
           ),
-
-          const SizedBox(height: 16.0),
-
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-            ),
-            onPressed: () {
-              if(_controller.text.isNotEmpty) {
-                DatabaseService().joinGroup(_controller.text);
-                Navigator.pop(context);
-              }
-            },
-            child: const Text("Join group"),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -592,12 +607,19 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
             decoration: const InputDecoration(
               hintText: "Give your group a name...",
               hintStyle: TextStyle(color: Colors.white70),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(vertical: 8.0),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(width: 2, color: Colors.white70)
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(width: 2, color: Colors.white)
+              ),
+              contentPadding: EdgeInsets.symmetric(vertical: 12.0),
               isDense: true,
               counterText: "",
             ),
           ),
+
+          const SizedBox(height: 4.0),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -618,8 +640,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
               backgroundColor: Colors.white,
             ),
             onPressed: _controller.text.isEmpty ? null : () {
-              DatabaseService().createGroup(_controller.text);
+              String name = _controller.text;
               Navigator.pop(context);
+              DatabaseService().createGroup(name);
             },
             child: Text(
               "Create group",

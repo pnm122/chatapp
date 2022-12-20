@@ -27,36 +27,41 @@ class DatabaseService {
     });
   }
 
-  createGroup(String groupName) async {
-    if(!verify()) return;
+  Future<bool> createGroup(String groupName) async {
+    if(!verify()) return false;
 
-    DocumentReference group = await groupCollection.add({
-      "name": groupName,
-      "createdTime": DateTime.now().millisecondsSinceEpoch,
-      "lastMessage": "",
-      "lastMessageSender": "",
-      "lastMessageTimeStamp": -1,
-      "members": [FirebaseAuth.instance.currentUser!.uid],
-      "numMessages": 0,
-      // Also will have a collection of messages
-    });
+    try {
+      DocumentReference group = await groupCollection.add({
+        "name": groupName,
+        "createdTime": DateTime.now().millisecondsSinceEpoch,
+        "lastMessage": "",
+        "lastMessageSender": "",
+        "lastMessageTimeStamp": -1,
+        "members": [FirebaseAuth.instance.currentUser!.uid],
+        "numMessages": 0,
+        // Also will have a collection of messages
+      });
 
-    // Add a count of messages read for this user
-    await group.collection("messagesReadByUser").doc(FirebaseAuth.instance.currentUser!.uid).set({
-      "numMessages": 0,
-    });
+      // Add a count of messages read for this user
+      await group.collection("messagesReadByUser").doc(FirebaseAuth.instance.currentUser!.uid).set({
+        "numMessages": 0,
+      });
 
-    // Store the ID in the group as well so it's easier to pull out later
-    await group.update({"id": group.id});
+      // Store the ID in the group as well so it's easier to pull out later
+      await group.update({"id": group.id});
 
-    String? uid = FirebaseAuth.instance.currentUser!.uid;
-    await userCollection.doc(uid).update({
-      "groups": FieldValue.arrayUnion([group.id])
-    });
+      String? uid = FirebaseAuth.instance.currentUser!.uid;
+      await userCollection.doc(uid).update({
+        "groups": FieldValue.arrayUnion([group.id])
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
-  joinGroup(String groupID) async {
-    if(!verify()) return;
+  Future<bool> joinGroup(String groupID) async {
+    if(!verify()) return false;
 
     String id = FirebaseAuth.instance.currentUser!.uid;
     try {
@@ -89,7 +94,7 @@ class DatabaseService {
   Stream<DocumentSnapshot>? getCurrentUserInfo() {
     if(!verify()) return null;
 
-    print("Getting current user info...");
+    //print("Getting current user info...");
 
     // Use instead of HelperFunctions method to get current user ID?
     String? uid = FirebaseAuth.instance.currentUser!.uid;
@@ -99,7 +104,7 @@ class DatabaseService {
   getCurrentUserName() async {
     if(!verify()) return null;
 
-    print("Getting current user name...");
+    //print("Getting current user name...");
 
     String? uid = FirebaseAuth.instance.currentUser!.uid;
     return await userCollection.doc(uid).get().then((value) => (value.data() as Map<String, dynamic>)["displayName"]);
@@ -108,7 +113,7 @@ class DatabaseService {
   Stream<DocumentSnapshot>? getGroup(String groupId) {
     if(!verify()) return null;
 
-    print("Getting group $groupId...");
+    //print("Getting group $groupId...");
 
     return groupCollection.doc(groupId).snapshots();
   }
@@ -116,7 +121,7 @@ class DatabaseService {
   Stream? getGroupUsers(String groupId) {
     if(!verify()) return null;
 
-    print("Getting current group's users...");
+    //print("Getting current group's users...");
 
     return userCollection.snapshots().map((event) {
       List users = [];
@@ -132,7 +137,7 @@ class DatabaseService {
   Stream? getUserGroups() {
     if(!verify()) return null;
 
-    print("Getting user's groups");
+    //print("Getting user's groups");
 
     // Get all groups that contain the current user's ID in them, then sort by most recent message
     // This list updates automatically thanks to snapshots()
@@ -164,7 +169,7 @@ class DatabaseService {
   Future setInactive() async {
     if(!verify()) return;
 
-    print("Setting user inactive...");
+    //print("Setting user inactive...");
 
     final user = FirebaseAuth.instance.currentUser;
     await userCollection.doc(user!.uid).update({
@@ -175,7 +180,7 @@ class DatabaseService {
   Future setActive() async {
     if(!verify()) return;
 
-    print("Setting user active...");
+    //print("Setting user active...");
 
     final user = FirebaseAuth.instance.currentUser;
     await userCollection.doc(user!.uid).update({
@@ -188,7 +193,7 @@ class DatabaseService {
   readAllMessages(String groupID) {
     if(!verify()) return;
 
-    print("Reading all messages from group $groupID...");
+    //print("Reading all messages from group $groupID...");
 
     var group = groupCollection.doc(groupID);
     group.get().then((value) {
@@ -206,7 +211,7 @@ class DatabaseService {
   getMessages(String groupID) {
     if(!verify()) return;
 
-    print("Getting messages from group $groupID");
+    //print("Getting messages from group $groupID");
 
     if(groupID.isEmpty) return null;
     return groupCollection.doc(groupID).collection("messages").orderBy("timeStamp").snapshots();
