@@ -26,6 +26,7 @@ class _GroupsState extends State<Groups> {
     return Scaffold(
       backgroundColor: Consts.foregroundColor,
       appBar: CustomAppBar(
+        automaticallyImplyLeading: false,
         height: 50,
         title: Text(
           "Your Groups",
@@ -34,11 +35,11 @@ class _GroupsState extends State<Groups> {
         actions: [
           Padding(
             padding: Consts.appBarIconPadding,
-            child: const ActionButton(defaultIcon: Icons.group_add_outlined, hoverIcon: Icons.group_add, popUpWidget: JoinGroupPopUp(), title: "Join Group"),
+            child: const ActionButton(defaultIcon: Icons.group_add_outlined, hoverIcon: Icons.group_add, page: JoinGroupScreen(), title: "Join Group"),
           ),
           Padding(
             padding: Consts.appBarIconPadding,
-            child: const ActionButton(defaultIcon: Icons.create_outlined, hoverIcon: Icons.create, popUpWidget: CreateGroupPopUp(), title: "Create Group"),
+            child: const ActionButton(defaultIcon: Icons.create_outlined, hoverIcon: Icons.create, page: CreateGroupScreen(), title: "Create Group"),
           ),
           const Padding(padding: EdgeInsets.all(4.0)),
         ]
@@ -55,7 +56,7 @@ class _GroupsState extends State<Groups> {
               },
             );
           }
-          if(snapshot.hasData) {
+          if(snapshot.connectionState == ConnectionState.active && snapshot.hasData) {
             if(snapshot.data.length == 0) {
               return Center(
                 child: Column(
@@ -74,24 +75,17 @@ class _GroupsState extends State<Groups> {
             return ListView.builder(
               itemCount: snapshot.data.length,
               itemBuilder: (context, index) {
-                return GroupTile(info: snapshot.data[index].data());
+                // Not sure why, but I need to check this condition when creating a group on the small layout,
+                // otherwise I get an error that something is null
+                if(snapshot.data[index] != null) {
+                  return GroupTile(info: snapshot.data[index].data());
+                } else {
+                  return const GroupTilePlaceholder();
+                }
               },
             );
           } else {
-            // No groups for this user
-            return Center(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Text("You haven't joined any groups yet."),
-                  SizedBox(height: 5.0),
-                  NoGroupsJoinGroupButton(),
-                  SizedBox(height: 5.0),
-                  NoGroupsCreateGroupButton()
-                ]
-              )
-            );
+            return const Center(child: CircularProgressIndicator());
           }
         },
       ),
@@ -100,10 +94,10 @@ class _GroupsState extends State<Groups> {
 }
 
 class ActionButton extends StatefulWidget {
-  const ActionButton({super.key, required this.defaultIcon, required this.hoverIcon, required this.popUpWidget, required this.title});
+  const ActionButton({super.key, required this.defaultIcon, required this.hoverIcon, required this.page, required this.title});
   final IconData defaultIcon;
   final IconData hoverIcon;
-  final Widget popUpWidget;
+  final Widget page;
   final String title;
 
   @override
@@ -124,7 +118,7 @@ class _ActionButtonState extends State<ActionButton> {
           });
         },
         onTap: () {
-          pushPopUp(context, widget.popUpWidget, widget.title, true);
+          pushSpecialScreen(context, widget.page, widget.title, true);
         },
         child: Icon(
           hovering ? widget.hoverIcon : widget.defaultIcon,
@@ -198,36 +192,23 @@ class GroupTile extends StatefulWidget {
 
 class _GroupTileState extends State<GroupTile> {
   bool hovering = false;
-  int numNewMessages = 0;
-  bool _disposed = false;
-
+  Stream? numMessagesReadStream; 
+  
   @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
-  }
-
-  @override
-  void setState(VoidCallback fn) {
-    if(_disposed) return;
-    super.setState(fn);
+  initState() {
+    DatabaseService().getMessagesReadInGroup(widget.info["id"]).then((value) {
+      setState(() {
+        numMessagesReadStream = value;
+      });
+    });
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    try {
-      DatabaseService().getNumberOfNewMessages(widget.info["id"]).then((value) {
-        setState(() {
-          numNewMessages = value;
-        });
-      });
-    } catch (e) {
-      // On creating a new group, this throws an error (Expected a value of type 'String', but got one of type 'Null')
-      // No idea how to fix this
-    }
-
     String selectedID = context.watch<MainViewModel>().selectedGroupId;
     bool selected = selectedID == widget.info["id"];
+    int numMessages = widget.info["numMessages"];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
@@ -235,9 +216,14 @@ class _GroupTileState extends State<GroupTile> {
         onTap: () {
           // Don't need to load a new group page if it's already selected
           if(!selected) {
+            // read all messages of the current group if it's selected
+            String beforeSwitchGroupId = context.read<MainViewModel>().selectedGroupId;
+            if(beforeSwitchGroupId.isNotEmpty) DatabaseService().readAllMessages(beforeSwitchGroupId);
+
             context.read<MainViewModel>().selectedGroupId = widget.info["id"];
             context.read<MainViewModel>().selectedGroupName = widget.info["name"];
-            context.read<MainViewModel>().selectedGroupMembers = widget.info["members"];
+            context.read<MainViewModel>().setSelectedGroupMembers(widget.info["members"]);
+            // set user's read messages to all messages in the newly selected group
             DatabaseService().readAllMessages(widget.info["id"]);
 
             // For when the groups page appears via button
@@ -350,7 +336,16 @@ class _GroupTileState extends State<GroupTile> {
                                   ),
                               ),
                             ),
-                          NewMessagesBubble(numNewMessages: numNewMessages),
+                          StreamBuilder(
+                            stream: numMessagesReadStream,
+                            builder: (context, snapshot) {
+                              if(snapshot.connectionState == ConnectionState.active) {
+                                return NewMessagesBubble(
+                                  numNewMessages: selected ? 0 : numMessages - snapshot.data.data()["numMessages"] as int
+                                );
+                              } else { return Container(); }
+                            }
+                          ),
                         ],
                       )
                     ],
@@ -362,29 +357,6 @@ class _GroupTileState extends State<GroupTile> {
         ),
       ),
     );
-  }
-}
-
-class NewMessagesBubble extends StatelessWidget {
-  const NewMessagesBubble({super.key, required this.numNewMessages});
-  final int numNewMessages;
-
-  @override
-  Widget build(BuildContext context) {
-    return numNewMessages > 0 ? Container(
-      width: 18,
-      height: 18,
-      decoration: const BoxDecoration(
-        color: Colors.red,
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          numNewMessages > 9 ? "9+" : numNewMessages.toString(),
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white),
-        ),
-      ),
-    ) : Container();
   }
 }
 
@@ -408,7 +380,7 @@ class _NoGroupsJoinGroupButtonState extends State<NoGroupsJoinGroupButton> {
         });
       },
       onTap: () {
-        pushPopUp(context, const JoinGroupPopUp(), "Join Group", true);
+        pushSpecialScreen(context, const JoinGroupScreen(), "Join a Group", true);
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -429,54 +401,59 @@ class _NoGroupsJoinGroupButtonState extends State<NoGroupsJoinGroupButton> {
   }
 }
 
-class JoinGroupPopUp extends StatefulWidget {
-  const JoinGroupPopUp({super.key});
+class JoinGroupScreen extends StatefulWidget {
+  const JoinGroupScreen({super.key});
 
   @override
-  State<JoinGroupPopUp> createState() => _JoinGroupPopUpState();
+  State<JoinGroupScreen> createState() => _JoinGroupScreenState();
 }
 
-class _JoinGroupPopUpState extends State<JoinGroupPopUp> {
+class _JoinGroupScreenState extends State<JoinGroupScreen> {
   final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    _controller.addListener(textChanged);
+    super.initState();
+  }
 
   @override
   void dispose() {
     super.dispose();
     _controller.dispose();
+    _controller.removeListener(textChanged);
+  }
+
+  textChanged() {
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          TextFormField(
-            textAlign: TextAlign.center,
-            controller: _controller,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700, color: Colors.black45),
-            decoration: const InputDecoration(
-              hintText: "Enter the group ID",
-              border: InputBorder.none,
-            ),
-          ),
-
-          const SizedBox(height: 16.0),
-
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-            ),
-            onPressed: () {
-              if(_controller.text.isNotEmpty) {
-                DatabaseService().joinGroup(_controller.text);
-                Navigator.pop(context);
-              }
-            },
-            child: const Text("Join group"),
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        SpecialScreenFormField(
+          controller: _controller, 
+          title: "ID", 
+          hintText: "Enter the group ID...", 
+          helpText: "Users who create a group can copy the group ID from the title above the chat room. Enter this ID to join that group!"
+        ),
+        SpecialScreenButton(
+          onPressed: _controller.text.isEmpty ? null : () {
+            Navigator.pop(context);
+            DatabaseService().joinGroup(_controller.text).then((success) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(success ? "Succesfully joined group" : "Failed to join group. The ID was probably invalid"),
+                  backgroundColor: success ? Consts.successColor : Colors.red,
+                )
+              );
+            });
+          }, 
+          title: "Join Group", 
+          controller: _controller
+        ),
+      ],
     );
   }
 }
@@ -501,7 +478,7 @@ class _NoGroupsCreateGroupButtonState extends State<NoGroupsCreateGroupButton> {
         });
       },
       onTap: () {
-        pushPopUp(context, const CreateGroupPopUp(), "Create Group", true);
+        pushSpecialScreen(context, const CreateGroupScreen(), "Create a Group", true);
       },
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -522,14 +499,14 @@ class _NoGroupsCreateGroupButtonState extends State<NoGroupsCreateGroupButton> {
   }
 }
 
-class CreateGroupPopUp extends StatefulWidget {
-  const CreateGroupPopUp({super.key});
+class CreateGroupScreen extends StatefulWidget {
+  const CreateGroupScreen({super.key});
 
   @override
-  State<CreateGroupPopUp> createState() => _CreateGroupPopUpState();
+  State<CreateGroupScreen> createState() => _CreateGroupScreenState();
 }
 
-class _CreateGroupPopUpState extends State<CreateGroupPopUp> {
+class _CreateGroupScreenState extends State<CreateGroupScreen> {
   final TextEditingController _controller = TextEditingController();
   String abbreviation = "G";
 
@@ -553,44 +530,46 @@ class _CreateGroupPopUpState extends State<CreateGroupPopUp> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16.0),
+    return Center(
       child: Column(
         children: [
-          Center(
-            child: CircleAvatar(
-              backgroundColor: const Color.fromARGB(255, 193, 193, 193),
-              foregroundColor: Colors.black,
-              radius: 45,
-              child: Text(abbreviation, style: Theme.of(context).textTheme.headline4)
+          Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color.fromARGB(255, 209, 242, 226),
+              border: Border.all(
+                color: Colors.white,
+                width: 6,
+              ),
+              boxShadow: const [
+                BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(2, 4))
+              ]
             ),
+            child: Center(
+              child: Text(
+                abbreviation,
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Consts.secondaryButtonColor),
+              ),
+            )
           ),
-          TextFormField(
+          const SizedBox(height: 16),
+          // Title of the field input
+          SpecialScreenFormField(
+            controller: _controller, 
+            title: "Name", 
             maxLength: Consts.maxGroupNameLength,
-            textAlign: TextAlign.center,
-            controller: _controller,
-            style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700, color: Colors.black45),
-            decoration: const InputDecoration(
-              hintText: "Give your group a name...",
-              border: InputBorder.none,
-            ),
-            minLines: 1,
-            maxLines: 2,
+            hintText: "Give your group a name...",
           ),
 
-          const SizedBox(height: 16.0),
-
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
-            ),
-            onPressed: () {
-              if(_controller.text.isNotEmpty) {
-                DatabaseService().createGroup(_controller.text);
-                Navigator.pop(context);
-              }
+          SpecialScreenButton(
+            onPressed: _controller.text.isEmpty ? null : () {
+              DatabaseService().createGroup(_controller.text);
+              Navigator.pop(context);
             },
-            child: const Text("Create group"),
+            title: "Create group", 
+            controller: _controller
           ),
         ],
       ),

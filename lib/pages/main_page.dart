@@ -5,18 +5,13 @@ import 'package:chatapp/pages/chat_page.dart';
 import 'package:chatapp/pages/info_page.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/viewmodels/main_view_model.dart';
-import 'package:chatapp/widgets/groups.dart';
-import 'package:chatapp/widgets/custom_app_bar.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/widgets/widgets.dart';
-import 'package:chatapp/pages/login_page.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import 'dart:html' as html;
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key, required this.viewModel});
@@ -24,49 +19,38 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var provider = Provider.of<AuthService>(context, listen: false);
+    bool active = true;
+    String selectedGroupId = context.read<MainViewModel>().selectedGroupId;
 
-    var selectedGroupName = context.watch<MainViewModel>().selectedGroupName;
+    html.window.onBeforeUnload.listen((event) async {
+      active = false;
+      await DatabaseService().setInactive();
+      // seems to never make it here :(
+      await DatabaseService().readAllMessages(selectedGroupId);
+    });
+    html.window.onBlur.listen((event) {
+      active = false;
+      InactiveTimer.set(() { 
+        DatabaseService().setInactive(); 
+      });
+    });
+    html.window.onFocus.listen((event) {
+      InactiveTimer.cancel();
+      if(!active) {
+        active = true;
+        DatabaseService().setActive();
+      }
+    });
 
-    // Ask the user to create a username after creating an account (displayName is only empty right after making an account)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       DatabaseService().getCurrentUserName().then((value) {
+        // set current username here so we don't have to keep reading from the database every time we need it
+        context.read<MainViewModel>().currentUserName = value;
+        
         if(value.isNotEmpty) return;
 
-        TextEditingController _controller = TextEditingController();
-
-        pushPopUp(context, Container(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              TextFormField(
-                textAlign: TextAlign.center,
-                controller: _controller,
-                style: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
-                decoration: const InputDecoration(
-                  hintText: "Give yourself a name...",
-                  border: InputBorder.none,
-                ),
-              ),
-
-              const SizedBox(height: 16.0),
-
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
-                ),
-                onPressed: () {
-                  if(_controller.text.isNotEmpty) {
-                    DatabaseService().setDisplayName(_controller.text);
-                    _controller.dispose();
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text("Let's chat!"),
-              ),
-            ],
-          )
-        ), "Create A Username", false);
+        // Ask the user to create a username after creating an account (displayName is only empty right after making an account)
+        pushSpecialScreen(context, const SetDisplayNameScreen(), "Create A Display Name", false);
       });
     });
 
@@ -79,6 +63,58 @@ class MainPage extends StatelessWidget {
         // Use expanded so it doesn't overflow (bc the other row element is a sizedbox)
         Expanded(
           child: ChatPage(viewModel: viewModel),
+        ),
+      ],
+    );
+  }
+}
+
+class SetDisplayNameScreen extends StatefulWidget {
+  const SetDisplayNameScreen({super.key});
+
+  @override
+  State<SetDisplayNameScreen> createState() => _SetDisplayNameScreenState();
+}
+
+class _SetDisplayNameScreenState extends State<SetDisplayNameScreen> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void initState() {
+    _controller.addListener(textChanged);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+    _controller.removeListener(textChanged);
+  }
+
+  textChanged() {
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        
+        SpecialScreenFormField(
+          controller: _controller, 
+          title: "Name", 
+          maxLength: Consts.maxDisplayNameLength,
+          hintText: "Give yourself a name..."
+        ),
+
+        SpecialScreenButton(
+          onPressed: _controller.text.isEmpty ? null : () {
+            DatabaseService().setDisplayName(_controller.text);
+            Navigator.pop(context);
+          },
+          controller: _controller,
+          title: "Start Chatting!",
         ),
       ],
     );

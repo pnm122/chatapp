@@ -3,15 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:chatapp/service/database_service.dart';
 
 class MainViewModel with ChangeNotifier {
+  String _currentUserName = "";
   String _selectedGroupId = "";
   String _selectedGroupName = "";
-  List _selectedGroupMembers = [];
+  // Store in viewmodel in the hopes that this reduces reads
+  Stream? _selectedGroupMembers;
   Stream<QuerySnapshot<Object?>>? _messages;
 
+  String? get currentUserName => _currentUserName;
   String get selectedGroupId => _selectedGroupId;
   String get selectedGroupName => _selectedGroupName;
-  List get selectedGroupMembers => _selectedGroupMembers;
+  Stream? get selectedGroupMembers => _selectedGroupMembers;
   Stream? get messages => _messages;
+
+  set currentUserName(name) {
+    _currentUserName = name;
+  }
 
   set selectedGroupId(id) {
     _selectedGroupId = id;
@@ -24,8 +31,8 @@ class MainViewModel with ChangeNotifier {
     notifyListeners();
   }
 
-  set selectedGroupMembers(members) {
-    _selectedGroupMembers = members;
+  setSelectedGroupMembers(List members) {
+    _selectedGroupMembers = DatabaseService().getGroupUsers(selectedGroupId);
     notifyListeners();
   }
 }

@@ -36,7 +36,8 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                width: 400, 
+                padding: const EdgeInsets.all(16.0),
+                width: 432, 
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[

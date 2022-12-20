@@ -2,10 +2,11 @@ import 'package:chatapp/consts.dart';
 import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CustomAppBar({super.key, this.leading, this.title, this.centerTitle, this.actions, this.backgroundColor = Consts.foregroundColor, this.hasBottom = false, this.height = 65.0});
+  const CustomAppBar({super.key, this.automaticallyImplyLeading, this.leading, this.title, this.centerTitle = false, this.actions, this.backgroundColor = Consts.foregroundColor, this.hasBottom = false, this.height = 65.0});
+  final bool? automaticallyImplyLeading;
   final Widget? leading;
   final Widget? title;
-  final bool? centerTitle;
+  final bool centerTitle;
   final List<Widget>? actions;
   final Color backgroundColor;
   final bool hasBottom;
@@ -18,6 +19,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: backgroundColor,
       shadowColor: Colors.transparent,
       foregroundColor: Theme.of(context).colorScheme.primary,
+      automaticallyImplyLeading: automaticallyImplyLeading ?? true,
       leading: leading,
       titleTextStyle: Theme.of(context).textTheme.headline6?.copyWith(fontWeight: FontWeight.w700),
       title: title,
