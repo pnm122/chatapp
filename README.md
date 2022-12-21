@@ -4,12 +4,11 @@ A group-based chat application created by Pierce Martin
 
 ## Version 2.1.3
 
-* TODO: Alerts for group creation, group renaming
 * Correct gaps between messages sent by different other users
-* Updated timestamp showing for messages > 1 min apart instead of > 5
-* BUG: New account has a displayName but when sending a message, the sender is empty
-* BUG: (Can't seem to replicate outside of deployed version) New messages not right in some circumstances
-* BUG: Creating groups on mobile breaks the UI?
+* Updated timestamp showing for messages > 3 min apart instead of > 5
+* BUG FIXED: New account has a displayName but when sending a message, the sender is empty
+* BUG FIXED: Creating groups on mobile breaks the UI
+  * Added null checks to numMessagesReadStream in groups.dart to ensure no errors; seems to still read correctly
 
 ## Version 2.1.2 (Current)
 
@@ -58,6 +57,7 @@ A group-based chat application created by Pierce Martin
 ### Eventually planned
 
 * Replies (using gestures? :o)
+* Alerts for group creation, group renaming, joining group
 * Profile pictures & Group pictures
 * Group deleting
 * Reactions to chats
@@ -76,4 +76,5 @@ A group-based chat application created by Pierce Martin
 * Setting inactive on log out didn't work once but couldn't reproduce. Happened right after first sign in
 * Reading all messages on window close doesn't work
 * Possible to create an account without creating database info, need a backup for this case
+* (Can't seem to replicate outside of deployed version) New messages not right in some circumstances
   

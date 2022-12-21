@@ -50,7 +50,15 @@ class MainPage extends StatelessWidget {
         if(value.isNotEmpty) return;
 
         // Ask the user to create a username after creating an account (displayName is only empty right after making an account)
-        pushSpecialScreen(context, const SetDisplayNameScreen(), "Create A Display Name", false);
+        pushSpecialScreen(context, 
+          // Wrap the viewmodel around this screen b/c I call a function to set the current user name in the viewmodel
+          ChangeNotifierProvider<MainViewModel>.value(
+            value: viewModel,
+            child: const SetDisplayNameScreen()
+          ), 
+          "Create A Display Name", 
+          false
+        );
       });
     });
 
@@ -110,6 +118,7 @@ class _SetDisplayNameScreenState extends State<SetDisplayNameScreen> {
 
         SpecialScreenButton(
           onPressed: _controller.text.isEmpty ? null : () {
+            context.read<MainViewModel>().currentUserName = _controller.text;
             DatabaseService().setDisplayName(_controller.text);
             Navigator.pop(context);
           },

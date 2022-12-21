@@ -26,7 +26,7 @@ class Message extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 300,000 ms => 5 minutes
-    final bool showTimeStamp = timeStamp > lastMessageTimeStamp + 60000;
+    final bool showTimeStamp = timeStamp > lastMessageTimeStamp + 180000;
     final bool groupingMessages = !showTimeStamp && sender == lastMessageSender;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: Consts.sideMargin),

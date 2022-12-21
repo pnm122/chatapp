@@ -196,12 +196,16 @@ class _GroupTileState extends State<GroupTile> {
   
   @override
   initState() {
-    DatabaseService().getMessagesReadInGroup(widget.info["id"]).then((value) {
-      setState(() {
-        numMessagesReadStream = value;
-      });
-    });
+    setNumMessagesRead();
     super.initState();
+  }
+
+  setNumMessagesRead() async {
+    numMessagesReadStream = await DatabaseService().getMessagesReadInGroup(widget.info["id"]);
+    if(numMessagesReadStream != null) {
+      print("check :)");
+      setState(() {});
+    } else { print("${widget.info["name"]} is null");}
   }
 
   @override
@@ -336,7 +340,7 @@ class _GroupTileState extends State<GroupTile> {
                                   ),
                               ),
                             ),
-                          StreamBuilder(
+                          numMessagesReadStream != null ? StreamBuilder(
                             stream: numMessagesReadStream,
                             builder: (context, snapshot) {
                               if(snapshot.connectionState == ConnectionState.active) {
@@ -345,7 +349,7 @@ class _GroupTileState extends State<GroupTile> {
                                 );
                               } else { return Container(); }
                             }
-                          ),
+                          ) : Container()
                         ],
                       )
                     ],
