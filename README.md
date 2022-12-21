@@ -2,7 +2,12 @@
 
 A group-based chat application created by Pierce Martin
 
-## Version 2.1.3
+## Version 2.2.0
+
+* TODO: Replies to messages
+* TODO: Reactions to messages
+
+## Version 2.1.3 (Current)
 
 * Correct gaps between messages sent by different other users
 * Updated timestamp showing for messages > 3 min apart instead of > 5
@@ -10,7 +15,7 @@ A group-based chat application created by Pierce Martin
 * BUG FIXED: Creating groups on mobile breaks the UI
   * Added null checks to numMessagesReadStream in groups.dart to ensure no errors; seems to still read correctly
 
-## Version 2.1.2 (Current)
+## Version 2.1.2
 
 * Username max length
 * Better appearance for popups
