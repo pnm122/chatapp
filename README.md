@@ -6,6 +6,8 @@ A group-based chat application created by Pierce Martin
 
 * TODO: Replies to messages
 * TODO: Reactions to messages
+  * (?) Store reactions as a list of strings representing reactions of the form: reaction-type_userID_displayName
+    * Do this to minimize the space i need to take up bc the other option would be storing a list of objects for each reaction or something similar
 
 ## Version 2.1.3 (Current)
 

@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/consts.dart';
+import 'package:flutter/services.dart';
 
 class Message extends StatelessWidget {
   const Message({
@@ -54,6 +55,10 @@ class Message extends StatelessWidget {
                       tag: heroTag,
                       child: GestureDetector(
                         onLongPressStart: (details) {
+                          double yPos = details.globalPosition.dy - details.localPosition.dy - 26 - 4 - 44;
+                          // make sure the popup doesn't go above the screen
+                          if(yPos < 16) yPos = 16;
+
                           Navigator.of(context).push(
                             PageRouteBuilder(
                               opaque: false,
@@ -67,10 +72,15 @@ class Message extends StatelessWidget {
                                       // *** WILL BREAK IF I ADD ANYTHING TO THE RIGHT SIDE OF THE MAIN PAGE
                                       // Better way to do this requires getting the widget width, which I can't do during a build :(
                                       right: sentByMe ? Consts.sideMargin : null,
-                                      top: details.globalPosition.dy - details.localPosition.dy - 26,
+                                      top: yPos,
                                       child: Column(
                                         crossAxisAlignment: sentByMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                                         children: [
+                                          // will eventually need a parameter to tell if we've reacted to this chat already
+                                          const ReactionOptions(height: 44),
+
+                                          const SizedBox(height: 4),
+
                                           SizedBox(
                                             height: 26,
                                             child: RichText(
@@ -101,32 +111,16 @@ class Message extends StatelessWidget {
                                           const SizedBox(height: 4.0),
 
                                           // Dropdown options
-                                          Container(
-                                            decoration: BoxDecoration(
-                                              color: Consts.foregroundColor,
-                                              borderRadius: sentByMe ? const BorderRadius.only(
-                                                topLeft: Radius.circular(18),
-                                                bottomRight: Radius.circular(18),
-                                                bottomLeft: Radius.circular(18)
-                                              ) : const BorderRadius.only(
-                                                topRight: Radius.circular(18),
-                                                bottomRight: Radius.circular(18),
-                                                bottomLeft: Radius.circular(18)
+                                          MessageDropdownOptionList(
+                                            sentByMe: sentByMe, 
+                                            options: [
+                                              MessageDropdownOption(
+                                                onTap: () {},
+                                                name: "Reply",
+                                                icon: Icons.reply,
                                               ),
-                                              boxShadow: const [
-                                                BoxShadow(blurRadius: 8, offset: Offset(3, 6), color: Colors.black12)
-                                              ]
-                                            ),
-                                            child: Column(
-                                              children: [
-                                                MessageDropdownOption(
-                                                  onTap: () {},
-                                                  name: "Reply",
-                                                  icon: Icons.reply,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
+                                            ]
+                                          )
                                         ],
                                       ),
                                     ),
@@ -178,6 +172,144 @@ class InnerMessage extends StatelessWidget {
           ? Consts.sentColor.computeLuminance() > 0.5 ? const Color.fromARGB(193, 0, 0, 0) : Colors.white
           : Consts.receivedColor.computeLuminance() > 0.5 ? Colors.black : Colors.white
         )
+      ),
+    );
+  }
+}
+
+class ReactionOptions extends StatefulWidget {
+  const ReactionOptions({super.key, required this.height});
+  final double height;
+
+  @override
+  State<ReactionOptions> createState() => _ReactionOptionsState();
+}
+
+class _ReactionOptionsState extends State<ReactionOptions> {
+  int selectedIndex = -1;
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: widget.height,
+      child: Wrap(
+        spacing: 6,
+        children: const [
+          ReactionOption(type: ReactionTypes.favorite),
+          ReactionOption(type: ReactionTypes.thumb_up),
+          ReactionOption(type: ReactionTypes.thumb_down),
+          ReactionOption(type: ReactionTypes.exclamation),
+          ReactionOption(type: ReactionTypes.question),
+        ],
+      )
+    );
+  }
+}
+
+class ReactionTypes {
+  static const String favorite = "FAVORITE";
+  static const String thumb_up = "THUMBUP";
+  static const String thumb_down = "THUMBDOWN";
+  static const String exclamation = "EXCLAMATION";
+  static const String question = "QUESTION";
+}
+
+class ReactionOption extends StatefulWidget {
+  const ReactionOption({super.key, required this.type});
+  final String type;
+
+  @override
+  State<ReactionOption> createState() => _ReactionOptionState();
+}
+
+class _ReactionOptionState extends State<ReactionOption> {
+  bool hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) {
+        setState(() {
+          hovering = true;
+        });
+      },
+      onExit: (_) {
+        setState(() {
+          hovering = false;
+        });
+      },
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: () {},
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: hovering ? Colors.white : Colors.white70,
+            borderRadius: BorderRadius.circular(99),
+            boxShadow: const [
+              BoxShadow(blurRadius: 8, offset: Offset(3, 6), color: Colors.black12)
+            ],
+          ),
+          child: Icon(
+            (){
+              switch(widget.type) {
+                case ReactionTypes.favorite:
+                  return Icons.favorite;
+                case ReactionTypes.thumb_up:
+                  return Icons.thumb_up;
+                case ReactionTypes.thumb_down:
+                  return Icons.thumb_down;
+                case ReactionTypes.exclamation:
+                  return Icons.priority_high;
+                case ReactionTypes.question:
+                  return Icons.question_mark;
+              }
+            }(),
+            color: hovering ? (){
+              switch(widget.type) {
+                case ReactionTypes.favorite:
+                  return Colors.red;
+                case ReactionTypes.thumb_up:
+                  return Colors.blue;
+                case ReactionTypes.thumb_down:
+                  return Colors.blue.shade900;
+                case ReactionTypes.exclamation:
+                  return Colors.yellow.shade800;
+                case ReactionTypes.question:
+                  return Colors.black;
+              }
+            }() : Colors.grey.shade700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class MessageDropdownOptionList extends StatelessWidget {
+  const MessageDropdownOptionList({super.key, required this.sentByMe, required this.options});
+  final bool sentByMe;
+  final List<MessageDropdownOption> options;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Consts.foregroundColor,
+        borderRadius: sentByMe ? const BorderRadius.only(
+          topLeft: Radius.circular(18),
+          bottomRight: Radius.circular(18),
+          bottomLeft: Radius.circular(18)
+        ) : const BorderRadius.only(
+          topRight: Radius.circular(18),
+          bottomRight: Radius.circular(18),
+          bottomLeft: Radius.circular(18)
+        ),
+        boxShadow: const [
+          BoxShadow(blurRadius: 8, offset: Offset(3, 6), color: Colors.black12)
+        ]
+      ),
+      child: Column(
+        children: options
       ),
     );
   }
