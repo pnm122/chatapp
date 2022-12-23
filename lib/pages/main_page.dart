@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:chatapp/consts.dart';
+import 'package:chatapp/constants/consts.dart';
 import 'package:chatapp/pages/chat_page.dart';
 import 'package:chatapp/pages/info_page.dart';
 import 'package:chatapp/service/database_service.dart';

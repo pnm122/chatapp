@@ -1,7 +1,7 @@
 import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/viewmodels/main_view_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:chatapp/consts.dart';
+import 'package:chatapp/constants/consts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
@@ -222,8 +222,13 @@ class DatabaseService {
 
     var group = groupCollection.doc(groupID);
 
-    group.collection("messages").add(messageMap);
-    group.update({
+    DocumentReference message = await group.collection("messages").add(messageMap);
+    // store the id with each message for the purpose of replies and reactions later
+    await message.update({
+      "id": message.id,
+    });
+
+    await group.update({
       "lastMessage": messageMap["message"],
       "lastMessageSender": messageMap["sender"],
       "lastMessageTimeStamp": messageMap["timeStamp"],
@@ -235,5 +240,17 @@ class DatabaseService {
   /// Doesn't seem to stop errors :(
   bool verify() {
     return FirebaseAuth.instance.currentUser != null;
+  }
+
+  reactToMessage(String groupID, String messageID, String reactionType, String uid) {
+    groupCollection.doc(groupID).collection("messages").doc(messageID).update({
+      "reactions": FieldValue.arrayUnion(["${reactionType}_$uid"]),
+    });
+  }
+
+  removeReactionToMessage(String groupID, String messageID, String reactionType, String uid) {
+    groupCollection.doc(groupID).collection("messages").doc(messageID).update({
+      "reactions": FieldValue.arrayRemove(["${reactionType}_$uid"]),
+    });
   }
 }

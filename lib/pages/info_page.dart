@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/service/database_service.dart';
-import 'package:chatapp/consts.dart';
+import 'package:chatapp/constants/consts.dart';
 import 'package:chatapp/widgets/widgets.dart';
 import 'package:chatapp/pages/login_page.dart';
 

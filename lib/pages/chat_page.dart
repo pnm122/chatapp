@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:html';
 
 import 'package:badges/badges.dart';
-import 'package:chatapp/consts.dart';
+import 'package:chatapp/constants/consts.dart';
 import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/pages/info_page.dart';
 import 'package:chatapp/pages/login_page.dart';
@@ -361,22 +361,26 @@ class _ChatPageState extends State<ChatPage> {
               if(index == snapshot.data.docs.length) {
                 return const SizedBox(height: 86);
               }
+              Map data = snapshot.data.docs[index].data();
               return Column(
                 children: [
                   snapshot.data.docs[index]["isAlert"] 
                     ? Alert(
-                      sender: snapshot.data.docs[index]["sender"],
-                      message: snapshot.data.docs[index]["message"],
-                      timeStamp: snapshot.data.docs[index]["timeStamp"],
+                      sender: data["sender"],
+                      message: data["message"],
+                      timeStamp: data["timeStamp"],
                     ) 
                     : Message(
-                      sender: snapshot.data.docs[index]["sender"],
+                      sender: data["sender"],
                       lastMessageSender: index > 0 ? snapshot.data.docs[index - 1]["sender"] : "",
-                      sentByMe: snapshot.data.docs[index]["senderID"] == FirebaseAuth.instance.currentUser!.uid,
-                      message: snapshot.data.docs[index]["message"],
-                      timeStamp: snapshot.data.docs[index]["timeStamp"],
+                      sentByMe: data["senderID"] == FirebaseAuth.instance.currentUser!.uid,
+                      message: data["message"],
+                      timeStamp: data["timeStamp"],
+                      messageID: data["id"],
+                      reactions: data["reactions"],
                       lastMessageTimeStamp: index > 0 ? snapshot.data.docs[index - 1]["timeStamp"] : 0,
                       currentDisplayName: loggedInDisplayName,
+                      viewModel: widget.viewModel,
                     ),
                 ],
               );
@@ -409,7 +413,8 @@ class _ChatPageState extends State<ChatPage> {
         "message": _messageController.text,
         "sender": context.read<MainViewModel>().currentUserName,
         "senderID": FirebaseAuth.instance.currentUser!.uid,
-        "timeStamp": Timestamp.now().millisecondsSinceEpoch
+        "timeStamp": Timestamp.now().millisecondsSinceEpoch,
+        "reactions": []
       };
 
       DatabaseService().sendMessage(groupID, messageMap).then((_) {

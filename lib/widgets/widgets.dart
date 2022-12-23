@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:chatapp/consts.dart';
+import 'package:chatapp/constants/consts.dart';
 import 'package:chatapp/helper/helper_functions.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/widgets/custom_app_bar.dart';

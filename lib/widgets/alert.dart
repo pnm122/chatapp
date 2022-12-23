@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chatapp/helper/helper_functions.dart';
-import 'package:chatapp/consts.dart';
+import 'package:chatapp/constants/consts.dart';
 
 class Alert extends StatelessWidget {
   const Alert({super.key, required this.sender, required this.message, required this.timeStamp});

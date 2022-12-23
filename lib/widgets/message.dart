@@ -1,10 +1,16 @@
+import 'package:chatapp/constants/reaction_types.dart';
+import 'package:chatapp/service/database_service.dart';
+import 'package:chatapp/viewmodels/main_view_model.dart';
+import 'package:chatapp/viewmodels/reaction_view_model.dart';
 import 'package:chatapp/widgets/message_time_stamp.dart';
 import 'package:chatapp/widgets/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:chatapp/helper/helper_functions.dart';
-import 'package:chatapp/consts.dart';
+import 'package:chatapp/constants/consts.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
 class Message extends StatelessWidget {
   const Message({
@@ -14,23 +20,28 @@ class Message extends StatelessWidget {
     required this.sentByMe, 
     required this.message, 
     required this.timeStamp, 
+    required this.messageID,
+    required this.reactions,
     required this.lastMessageTimeStamp,
-    required this.currentDisplayName
+    required this.currentDisplayName,
+    required this.viewModel,
   });
   final String sender;
   final String lastMessageSender;
   final bool sentByMe;
   final String message;
   final int timeStamp;
+  final String? messageID;
+  final List reactions;
   final int lastMessageTimeStamp;
   final String currentDisplayName;
+  final MainViewModel viewModel;
 
   @override
   Widget build(BuildContext context) {
     // 180,000 ms => 3 minutes
     final bool showTimeStamp = timeStamp > lastMessageTimeStamp + 180000;
     final bool groupingMessages = !showTimeStamp && sender == lastMessageSender;
-    final String heroTag = "${timeStamp}_$sender";
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: Consts.sideMargin),
       child: Column(
@@ -51,21 +62,25 @@ class Message extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Consts.senderColor),
                     ),
                     const SizedBox(height: 4.0),
-                    Hero(
-                      tag: heroTag,
-                      child: GestureDetector(
-                        onLongPressStart: (details) {
-                          double yPos = details.globalPosition.dy - details.localPosition.dy - 26 - 4 - 44;
-                          // make sure the popup doesn't go above the screen
-                          if(yPos < 16) yPos = 16;
+                    GestureDetector(
+                      onLongPressStart: (details) {
+                        // Takes time to assign ID to just-sent messages, which is used for replying
+                        // So I don't allow the popup to come up until this is loaded
+                        if(messageID == null) return;
 
-                          Navigator.of(context).push(
-                            PageRouteBuilder(
-                              opaque: false,
-                              barrierDismissible: true,
-                              barrierColor: Colors.black87,
-                              pageBuilder: (_, __, ___) { 
-                                return Stack(
+                        double yPos = details.globalPosition.dy - details.localPosition.dy - 26 - 4 - 44;
+                        // make sure the popup doesn't go above the screen
+                        if(yPos < 16) yPos = 16;
+
+                        Navigator.of(context).push(
+                          PageRouteBuilder(
+                            opaque: false,
+                            barrierDismissible: true,
+                            barrierColor: Colors.black87,
+                            pageBuilder: (_, __, ___) { 
+                              return ChangeNotifierProvider<MainViewModel>.value(
+                                value: viewModel,
+                                child: Stack(
                                   children: [
                                     Positioned(
                                       left: sentByMe ? null : details.globalPosition.dx - details.localPosition.dx,
@@ -76,11 +91,13 @@ class Message extends StatelessWidget {
                                       child: Column(
                                         crossAxisAlignment: sentByMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                                         children: [
-                                          // will eventually need a parameter to tell if we've reacted to this chat already
-                                          const ReactionOptions(height: 44),
-
+                                          ChangeNotifierProvider(
+                                            create: (context) => ReactionViewModel(reactions, messageID!),
+                                            child: const ReactionOptions(height: 44),
+                                          ),
+                              
                                           const SizedBox(height: 4),
-
+                              
                                           SizedBox(
                                             height: 26,
                                             child: RichText(
@@ -97,19 +114,16 @@ class Message extends StatelessWidget {
                                               textAlign: sentByMe ? TextAlign.end : TextAlign.start,
                                             ),
                                           ),
-                                          Hero(
-                                            tag: heroTag,
-                                            child: Container(
-                                              decoration: const BoxDecoration(
-                                                boxShadow: [
-                                                  BoxShadow(blurRadius: 8, offset: Offset(3, 6), color: Colors.black12)
-                                                ]
-                                              ),
-                                              child: InnerMessage(sentByMe: sentByMe, message: message, sender: sender)
+                                          Container(
+                                            decoration: const BoxDecoration(
+                                              boxShadow: [
+                                                BoxShadow(blurRadius: 8, offset: Offset(3, 6), color: Colors.black12)
+                                              ]
                                             ),
+                                            child: InnerMessage(sentByMe: sentByMe, message: message, sender: sender)
                                           ),
                                           const SizedBox(height: 4.0),
-
+                              
                                           // Dropdown options
                                           MessageDropdownOptionList(
                                             sentByMe: sentByMe, 
@@ -125,13 +139,13 @@ class Message extends StatelessWidget {
                                       ),
                                     ),
                                   ],
-                                );
-                              }
-                            )
-                          );
-                        },
-                        child: InnerMessage(sentByMe: sentByMe, message: message, sender: sender),
-                      ),
+                                ),
+                              );
+                            }
+                          )
+                        );
+                      },
+                      child: InnerMessage(sentByMe: sentByMe, message: message, sender: sender, reactions: reactions),
                     ),
                   ],
                 ),
@@ -145,33 +159,93 @@ class Message extends StatelessWidget {
 }
 
 class InnerMessage extends StatelessWidget {
-  const InnerMessage({super.key, required this.sentByMe, required this.message, required this.sender});
+  const InnerMessage({super.key, required this.sentByMe, required this.message, required this.sender, this.reactions});
   final bool sentByMe;
   final String message;
   final String sender;
+  final List? reactions;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.only(
-          topLeft: Consts.messageRadius,
-          topRight: Consts.messageRadius,
-          bottomLeft: sentByMe ? Consts.messageRadius : Radius.zero,
-          bottomRight: sentByMe ? Radius.zero : Consts.messageRadius,
+    return Column(
+      crossAxisAlignment: sentByMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.only(
+              topLeft: Consts.messageRadius,
+              topRight: Consts.messageRadius,
+              bottomLeft: sentByMe ? Consts.messageRadius : Radius.zero,
+              bottomRight: sentByMe ? Radius.zero : Consts.messageRadius,
+            ),
+            color: sentByMe
+            ? Consts.sentColor
+            : Consts.receivedColor,
+          ),
+          constraints: const BoxConstraints(maxWidth: 350),
+          padding: const EdgeInsets.all(16.0),
+          child: SelectableText(
+            message,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: sentByMe
+              ? Consts.sentColor.computeLuminance() > 0.5 ? const Color.fromARGB(193, 0, 0, 0) : Colors.white
+              : Consts.receivedColor.computeLuminance() > 0.5 ? Colors.black : Colors.white
+            )
+          ),
         ),
-        color: sentByMe
-        ? Consts.sentColor
-        : Consts.receivedColor,
-      ),
-      constraints: const BoxConstraints(maxWidth: 350),
-      padding: const EdgeInsets.all(16.0),
-      child: SelectableText(
-        message,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: sentByMe
-          ? Consts.sentColor.computeLuminance() > 0.5 ? const Color.fromARGB(193, 0, 0, 0) : Colors.white
-          : Consts.receivedColor.computeLuminance() > 0.5 ? Colors.black : Colors.white
-        )
+        reactions != null && reactions!.isNotEmpty ? const SizedBox(height: 4) : Container(),
+        reactions != null && reactions!.isNotEmpty ? OnMessageReactions(reactions: reactions!) : Container(),
+      ],
+    );
+  }
+}
+
+class OnMessageReactions extends StatelessWidget {
+  const OnMessageReactions({super.key, required this.reactions});
+  final List reactions;
+
+  @override
+  Widget build(BuildContext context) {
+    Map<String, int> reactionsByType = <String, int>{};
+    for(String reaction in reactions) {
+      List<String> split = reaction.split('_');
+      int? val = reactionsByType[split.first];
+      if(val == null) { 
+        reactionsByType[split.first] = 1; 
+      } else { 
+        reactionsByType[split.first] = val + 1; 
+      }
+    }
+    double size = 20;
+
+    return SizedBox(
+      height: size,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: reactionsByType.length,
+        shrinkWrap: true,
+        itemBuilder: (context, index) {
+          String type = reactionsByType.entries.elementAt(index).key;
+          int numReactions = reactionsByType.entries.elementAt(index).value;
+          return Row(
+            children: [
+              Container(
+                height: size,
+                width: size,
+                decoration: BoxDecoration(
+                  color: ReactionTypes.colorOf(type),
+                  shape: BoxShape.circle
+                ),
+                child: Icon(
+                  ReactionTypes.iconOf(type),
+                  color: Colors.white,
+                  size: size / 2,
+                ),
+              ),
+              index != reactionsByType.length - 1 ? const SizedBox(width: 4) : Container(),
+            ],
+          );
+        },
       ),
     );
   }
@@ -205,14 +279,6 @@ class _ReactionOptionsState extends State<ReactionOptions> {
   }
 }
 
-class ReactionTypes {
-  static const String favorite = "FAVORITE";
-  static const String thumb_up = "THUMBUP";
-  static const String thumb_down = "THUMBDOWN";
-  static const String exclamation = "EXCLAMATION";
-  static const String question = "QUESTION";
-}
-
 class ReactionOption extends StatefulWidget {
   const ReactionOption({super.key, required this.type});
   final String type;
@@ -226,6 +292,8 @@ class _ReactionOptionState extends State<ReactionOption> {
 
   @override
   Widget build(BuildContext context) {
+    String currentUserReaction = context.watch<ReactionViewModel>().currentUserReaction;
+    bool selected = currentUserReaction == widget.type;
     return MouseRegion(
       onEnter: (_) {
         setState(() {
@@ -239,45 +307,41 @@ class _ReactionOptionState extends State<ReactionOption> {
       },
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: () {},
+        onTap: () {
+          if(currentUserReaction != "") {
+            DatabaseService().removeReactionToMessage(
+              context.read<MainViewModel>().selectedGroupId, 
+              context.read<ReactionViewModel>().messageID, 
+              currentUserReaction, 
+              FirebaseAuth.instance.currentUser!.uid,
+            );
+          }
+          if(currentUserReaction == widget.type) {
+            context.read<ReactionViewModel>().currentUserReaction = "";
+            return;
+          }
+
+          DatabaseService().reactToMessage(
+            context.read<MainViewModel>().selectedGroupId, 
+            context.read<ReactionViewModel>().messageID, 
+            widget.type, 
+            FirebaseAuth.instance.currentUser!.uid,
+          );
+          context.read<ReactionViewModel>().currentUserReaction = widget.type;
+        },
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: hovering ? Colors.white : Colors.white70,
+            color: selected ? ReactionTypes.colorOf(widget.type) : Colors.white,
             borderRadius: BorderRadius.circular(99),
             boxShadow: const [
               BoxShadow(blurRadius: 8, offset: Offset(3, 6), color: Colors.black12)
             ],
           ),
           child: Icon(
-            (){
-              switch(widget.type) {
-                case ReactionTypes.favorite:
-                  return Icons.favorite;
-                case ReactionTypes.thumb_up:
-                  return Icons.thumb_up;
-                case ReactionTypes.thumb_down:
-                  return Icons.thumb_down;
-                case ReactionTypes.exclamation:
-                  return Icons.priority_high;
-                case ReactionTypes.question:
-                  return Icons.question_mark;
-              }
-            }(),
-            color: hovering ? (){
-              switch(widget.type) {
-                case ReactionTypes.favorite:
-                  return Colors.red;
-                case ReactionTypes.thumb_up:
-                  return Colors.blue;
-                case ReactionTypes.thumb_down:
-                  return Colors.blue.shade900;
-                case ReactionTypes.exclamation:
-                  return Colors.yellow.shade800;
-                case ReactionTypes.question:
-                  return Colors.black;
-              }
-            }() : Colors.grey.shade700,
+            ReactionTypes.iconOf(widget.type),
+            color: selected ? Colors.white 
+                 : hovering ? ReactionTypes.colorOf(widget.type) : Colors.black,
           ),
         ),
       ),
