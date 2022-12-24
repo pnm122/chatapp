@@ -178,7 +178,7 @@ class _ChatPageState extends State<ChatPage> {
         ),
         leading: MediaQuery.of(context).size.width > Consts.cutoffWidth
           ? null : IconButton(
-            icon: const Icon(Icons.groups),
+            icon: const Icon(Icons.menu),
             // Using this instead of drawer because Scaffold.of(context).openDrawer() didn't like me for some reason
             onPressed: () => Navigator.of(context).push(
               PageRouteBuilder(
@@ -492,13 +492,13 @@ class ReplyToMessage extends StatelessWidget {
                         !waiting ? Text(
                           "Replying to ${snapshot.data.data()["sender"].toString()}:",
                           style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700, color: Colors.black),
-                          overflow: TextOverflow.clip,
+                          overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ) : Container(),
                         !waiting ? Text(
                           snapshot.data.data()["message"].toString(),
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade800),
-                          overflow: TextOverflow.clip,
+                          overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                         ) : Container(),
                       ],

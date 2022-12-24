@@ -37,7 +37,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Chat App',
         theme: ThemeData(
-          fontFamily: "Inter",
+          fontFamily: "Roboto",
           colorScheme: const ColorScheme( 
             primary: Color.fromARGB(255, 7, 181, 94),
             onPrimary: Colors.white,
@@ -55,7 +55,7 @@ class MyApp extends StatelessWidget {
           textSelectionTheme: const TextSelectionThemeData(cursorColor: Colors.black, selectionColor: Color.fromARGB(152, 142, 193, 255)),
           dividerColor: Colors.grey.shade100,
         ),
-        home: MainWrapper(),
+        home: const MainWrapper(),
       ),
     );
   }

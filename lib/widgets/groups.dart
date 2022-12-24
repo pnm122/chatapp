@@ -286,7 +286,7 @@ class _GroupTileState extends State<GroupTile> {
                               widget.info["name"],
                               maxLines: 1,
                               // ellipsis bugs out with custom font
-                              overflow: TextOverflow.clip,
+                              overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                 fontWeight: FontWeight.w700, 
                                 color: selected ? Theme.of(context).colorScheme.primary : Colors.black,
@@ -323,7 +323,7 @@ class _GroupTileState extends State<GroupTile> {
                               child: RichText(
                                   maxLines: 2,
                                   // ellipsis bugs out with custom font
-                                  overflow: TextOverflow.clip,
+                                  overflow: TextOverflow.ellipsis,
                                   text: TextSpan(
                                     text: "${widget.info["lastMessageSender"]}: ",
                                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(

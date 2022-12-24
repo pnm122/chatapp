@@ -17,7 +17,7 @@ class Consts {
   static EdgeInsets groupSectionPadding =  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
   static EdgeInsets groupTilePadding = const EdgeInsets.all(12.0);
   static const double groupTileHeight = 76;
-  static const Color backgroundColor = Color.fromARGB(255, 249, 249, 249); // i.e. chat background
+  static const Color backgroundColor = Color.fromARGB(255, 246, 247, 248); // i.e. chat background
   static const Color foregroundColor = Color.fromARGB(255, 255, 255, 255); // i.e. groups background
   static const Color toolTipColor = Color.fromARGB(255, 73, 73, 73);
   static const Color hoverColor = Color.fromARGB(255, 242, 242, 242);
