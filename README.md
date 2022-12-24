@@ -2,15 +2,14 @@
 
 A group-based chat application created by Pierce Martin
 
-## Version 2.2.0
+## Version 2.2.0 (Current)
 
 * BUG FIXED: Constant redraws when the scroll button is showing
-* TODO: Clean up message page (separate things into widgets)
 * Replies to messages
 * Reactions to messages
-* TODO: Choose a new font that can overflow properly
+* Switched to Roboto font because it can overflow properly
 
-## Version 2.1.3 (Current)
+## Version 2.1.3
 
 * Correct gaps between messages sent by different other users
 * Updated timestamp showing for messages > 3 min apart instead of > 5
@@ -64,11 +63,11 @@ A group-based chat application created by Pierce Martin
 
 ### Eventually planned
 
-* Replies (using gestures? :o)
+* TODO: Clean up message page (separate things into widgets)
+* Reply via swipe
 * Alerts for group creation, group renaming, joining group
 * Profile pictures & Group pictures
 * Group deleting
-* Reactions to chats
 * Version info page
 * Pin messages
 * Attachments
