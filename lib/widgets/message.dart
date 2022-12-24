@@ -205,14 +205,16 @@ class OnMessageReactions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Map<String, int> reactionsByType = <String, int>{};
+    // users with each type of reaction
+    Map<String, String> reactionsByType = <String, String>{};
     for(String reaction in reactions) {
+      // reactions are stored as TYPE_UID_DISPLAYNAME
       List<String> split = reaction.split('_');
-      int? val = reactionsByType[split.first];
-      if(val == null) { 
-        reactionsByType[split.first] = 1; 
+      String? names = reactionsByType[split.first];
+      if(names == null) { 
+        reactionsByType[split.first] = split.last; 
       } else { 
-        reactionsByType[split.first] = val + 1; 
+        reactionsByType[split.first] = "$names, ${split.last}"; 
       }
     }
     double size = 20;
@@ -226,20 +228,27 @@ class OnMessageReactions extends StatelessWidget {
         shrinkWrap: true,
         itemBuilder: (context, index) {
           String type = reactionsByType.entries.elementAt(index).key;
-          int numReactions = reactionsByType.entries.elementAt(index).value;
+          String names = reactionsByType.entries.elementAt(index).value;
           return Row(
             children: [
-              Container(
-                height: size,
-                width: size,
-                decoration: BoxDecoration(
-                  color: ReactionTypes.colorOf(type),
-                  shape: BoxShape.circle
+              Tooltip(
+                message: names,
+                verticalOffset: 12,
+                decoration: const BoxDecoration(
+                  color: Consts.toolTipColor,
                 ),
-                child: Icon(
-                  ReactionTypes.iconOf(type),
-                  color: Colors.white,
-                  size: size / 2,
+                child: Container(
+                  height: size,
+                  width: size,
+                  decoration: BoxDecoration(
+                    color: ReactionTypes.colorOf(type),
+                    shape: BoxShape.circle
+                  ),
+                  child: Icon(
+                    ReactionTypes.iconOf(type),
+                    color: Colors.white,
+                    size: size / 2,
+                  ),
                 ),
               ),
               index != reactionsByType.length - 1 ? const SizedBox(width: 4) : Container(),
@@ -314,6 +323,7 @@ class _ReactionOptionState extends State<ReactionOption> {
               context.read<ReactionViewModel>().messageID, 
               currentUserReaction, 
               FirebaseAuth.instance.currentUser!.uid,
+              context.read<MainViewModel>().currentUserName,
             );
           }
           if(currentUserReaction == widget.type) {
@@ -326,6 +336,7 @@ class _ReactionOptionState extends State<ReactionOption> {
             context.read<ReactionViewModel>().messageID, 
             widget.type, 
             FirebaseAuth.instance.currentUser!.uid,
+            context.read<MainViewModel>().currentUserName,
           );
           context.read<ReactionViewModel>().currentUserReaction = widget.type;
         },

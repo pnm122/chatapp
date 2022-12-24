@@ -14,7 +14,7 @@ class ReactionTypes {
       case ReactionTypes.thumb_up:
         return Colors.blue;
       case ReactionTypes.thumb_down:
-        return Colors.teal;
+        return Colors.purple.shade600;
       case ReactionTypes.exclamation:
         return Colors.yellow.shade800;
       case ReactionTypes.question:

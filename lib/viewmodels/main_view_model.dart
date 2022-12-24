@@ -10,7 +10,7 @@ class MainViewModel with ChangeNotifier {
   Stream? _selectedGroupMembers;
   Stream<QuerySnapshot<Object?>>? _messages;
 
-  String? get currentUserName => _currentUserName;
+  String get currentUserName => _currentUserName;
   String get selectedGroupId => _selectedGroupId;
   String get selectedGroupName => _selectedGroupName;
   Stream? get selectedGroupMembers => _selectedGroupMembers;

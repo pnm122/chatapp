@@ -9,10 +9,10 @@ class ReactionViewModel with ChangeNotifier {
   ReactionViewModel(reactions, this.messageID) {
     if(reactions == null) _currentUserReaction = "";
     // format for reactions:
-    // TYPE_UID
+    // TYPE_UID_DISPLAYNAME
     for(String reaction in reactions!) {
       List<String> split = reaction.split('_');
-      String uid = split.last;
+      String uid = split.elementAt(1);
 
       if(uid == FirebaseAuth.instance.currentUser!.uid) {
         _currentUserReaction = split.first;

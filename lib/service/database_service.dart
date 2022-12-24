@@ -224,11 +224,11 @@ class DatabaseService {
 
     DocumentReference message = await group.collection("messages").add(messageMap);
     // store the id with each message for the purpose of replies and reactions later
-    await message.update({
+    message.update({
       "id": message.id,
     });
 
-    await group.update({
+    group.update({
       "lastMessage": messageMap["message"],
       "lastMessageSender": messageMap["sender"],
       "lastMessageTimeStamp": messageMap["timeStamp"],
@@ -242,15 +242,15 @@ class DatabaseService {
     return FirebaseAuth.instance.currentUser != null;
   }
 
-  reactToMessage(String groupID, String messageID, String reactionType, String uid) {
+  reactToMessage(String groupID, String messageID, String reactionType, String uid, String displayName) {
     groupCollection.doc(groupID).collection("messages").doc(messageID).update({
-      "reactions": FieldValue.arrayUnion(["${reactionType}_$uid"]),
+      "reactions": FieldValue.arrayUnion(["${reactionType}_${uid}_$displayName"]),
     });
   }
 
-  removeReactionToMessage(String groupID, String messageID, String reactionType, String uid) {
+  removeReactionToMessage(String groupID, String messageID, String reactionType, String uid, String displayName) {
     groupCollection.doc(groupID).collection("messages").doc(messageID).update({
-      "reactions": FieldValue.arrayRemove(["${reactionType}_$uid"]),
+      "reactions": FieldValue.arrayRemove(["${reactionType}_${uid}_$displayName"]),
     });
   }
 }
