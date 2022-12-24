@@ -1,7 +1,7 @@
 import 'package:chatapp/constants/reaction_types.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/viewmodels/main_view_model.dart';
-import 'package:chatapp/viewmodels/reaction_view_model.dart';
+import 'package:chatapp/viewmodels/chat_page_view_model.dart';
 import 'package:chatapp/widgets/message_time_stamp.dart';
 import 'package:chatapp/widgets/widgets.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,20 +22,32 @@ class Message extends StatelessWidget {
     required this.timeStamp, 
     required this.messageID,
     required this.reactions,
+    required this.replyID,
     required this.lastMessageTimeStamp,
-    required this.currentDisplayName,
-    required this.viewModel,
+    required this.mainViewModel,
+    required this.chatPageViewModel,
   });
+  // who the message was sent by
   final String sender;
+  // who sent the message before this one. used to figure out what padding to use/if the name should appear with the message
   final String lastMessageSender;
+  // if this message was sent by the current user
   final bool sentByMe;
+  // the message content
   final String message;
+  // time the message was sent in milliseconds since Epoch
   final int timeStamp;
+  // ID of the message. Can be null while waiting to set the ID after creating the message, since these must be done in two steps in DatabaseService
   final String? messageID;
+  // list of reactions to this message
   final List reactions;
+  // ID of the message this message is replying to
+  final String? replyID;
+  // time the message before this message was sent. used to figure out what padding to use/if the name should appear with the message
   final int lastMessageTimeStamp;
-  final String currentDisplayName;
-  final MainViewModel viewModel;
+  // MainViewModel instance which gets passed into the new screen created on long pressing a message
+  final MainViewModel mainViewModel;
+  final ChatPageViewModel chatPageViewModel;
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +80,8 @@ class Message extends StatelessWidget {
                         // So I don't allow the popup to come up until this is loaded
                         if(messageID == null) return;
 
+                        context.read<ChatPageViewModel>().setSelectedMessage(messageID!, reactions);
+
                         double yPos = details.globalPosition.dy - details.localPosition.dy - 26 - 4 - 44;
                         // make sure the popup doesn't go above the screen
                         if(yPos < 16) yPos = 16;
@@ -78,67 +92,71 @@ class Message extends StatelessWidget {
                             barrierDismissible: true,
                             barrierColor: Colors.black87,
                             pageBuilder: (_, __, ___) { 
+                              // Wrap both viewmodels around this page since we need to call functions on/get data from both
                               return ChangeNotifierProvider<MainViewModel>.value(
-                                value: viewModel,
-                                child: Stack(
-                                  children: [
-                                    Positioned(
-                                      left: sentByMe ? null : details.globalPosition.dx - details.localPosition.dx,
-                                      // *** WILL BREAK IF I ADD ANYTHING TO THE RIGHT SIDE OF THE MAIN PAGE
-                                      // Better way to do this requires getting the widget width, which I can't do during a build :(
-                                      right: sentByMe ? Consts.sideMargin : null,
-                                      top: yPos,
-                                      child: Column(
-                                        crossAxisAlignment: sentByMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                                        children: [
-                                          ChangeNotifierProvider(
-                                            create: (context) => ReactionViewModel(reactions, messageID!),
-                                            child: const ReactionOptions(height: 44),
-                                          ),
-                              
-                                          const SizedBox(height: 4),
-                              
-                                          SizedBox(
-                                            height: 26,
-                                            child: RichText(
-                                              text: TextSpan(
-                                                text: "$sender  ",
-                                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
-                                                children: [
-                                                  TextSpan(
-                                                    text: HelperFunctions.timeStampToString(timeStamp),
-                                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-                                                  )
+                                value: mainViewModel,
+                                child: ChangeNotifierProvider<ChatPageViewModel>.value(
+                                  value: chatPageViewModel,
+                                  child: Stack(
+                                    children: [
+                                      Positioned(
+                                        left: sentByMe ? null : details.globalPosition.dx - details.localPosition.dx,
+                                        // *** WILL BREAK IF I ADD ANYTHING TO THE RIGHT SIDE OF THE MAIN PAGE
+                                        // Better way to do this requires getting the widget width, which I can't do during a build :(
+                                        right: sentByMe ? Consts.sideMargin : null,
+                                        top: yPos,
+                                        child: Column(
+                                          crossAxisAlignment: sentByMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                          children: [
+                                            const ReactionOptions(height: 44),
+                                                              
+                                            const SizedBox(height: 4),
+                                                              
+                                            SizedBox(
+                                              height: 26,
+                                              child: RichText(
+                                                text: TextSpan(
+                                                  text: "$sender  ",
+                                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white),
+                                                  children: [
+                                                    TextSpan(
+                                                      text: HelperFunctions.timeStampToString(timeStamp),
+                                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                                                    )
+                                                  ]
+                                                ),
+                                                textAlign: sentByMe ? TextAlign.end : TextAlign.start,
+                                              ),
+                                            ),
+                                            Container(
+                                              decoration: const BoxDecoration(
+                                                boxShadow: [
+                                                  BoxShadow(blurRadius: 8, offset: Offset(3, 6), color: Colors.black12)
                                                 ]
                                               ),
-                                              textAlign: sentByMe ? TextAlign.end : TextAlign.start,
+                                              child: InnerMessage(sentByMe: sentByMe, message: message, sender: sender)
                                             ),
-                                          ),
-                                          Container(
-                                            decoration: const BoxDecoration(
-                                              boxShadow: [
-                                                BoxShadow(blurRadius: 8, offset: Offset(3, 6), color: Colors.black12)
+                                            const SizedBox(height: 4.0),
+                                                              
+                                            // Dropdown options
+                                            MessageDropdownOptionList(
+                                              sentByMe: sentByMe, 
+                                              options: [
+                                                MessageDropdownOption(
+                                                  onTap: () {
+                                                    context.read<ChatPageViewModel>().replyingToID = context.read<ChatPageViewModel>().selectedMessageID;
+                                                    Navigator.pop(context);
+                                                  },
+                                                  name: "Reply",
+                                                  icon: Icons.reply,
+                                                ),
                                               ]
-                                            ),
-                                            child: InnerMessage(sentByMe: sentByMe, message: message, sender: sender)
-                                          ),
-                                          const SizedBox(height: 4.0),
-                              
-                                          // Dropdown options
-                                          MessageDropdownOptionList(
-                                            sentByMe: sentByMe, 
-                                            options: [
-                                              MessageDropdownOption(
-                                                onTap: () {},
-                                                name: "Reply",
-                                                icon: Icons.reply,
-                                              ),
-                                            ]
-                                          )
-                                        ],
+                                            )
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               );
                             }
@@ -301,7 +319,7 @@ class _ReactionOptionState extends State<ReactionOption> {
 
   @override
   Widget build(BuildContext context) {
-    String currentUserReaction = context.watch<ReactionViewModel>().currentUserReaction;
+    String currentUserReaction = context.watch<ChatPageViewModel>().selectedMessageReaction;
     bool selected = currentUserReaction == widget.type;
     return MouseRegion(
       onEnter: (_) {
@@ -320,25 +338,25 @@ class _ReactionOptionState extends State<ReactionOption> {
           if(currentUserReaction != "") {
             DatabaseService().removeReactionToMessage(
               context.read<MainViewModel>().selectedGroupId, 
-              context.read<ReactionViewModel>().messageID, 
+              context.read<ChatPageViewModel>().selectedMessageID, 
               currentUserReaction, 
               FirebaseAuth.instance.currentUser!.uid,
               context.read<MainViewModel>().currentUserName,
             );
           }
           if(currentUserReaction == widget.type) {
-            context.read<ReactionViewModel>().currentUserReaction = "";
+            context.read<ChatPageViewModel>().currentUserReaction = "";
             return;
           }
 
           DatabaseService().reactToMessage(
             context.read<MainViewModel>().selectedGroupId, 
-            context.read<ReactionViewModel>().messageID, 
+            context.read<ChatPageViewModel>().selectedMessageID, 
             widget.type, 
             FirebaseAuth.instance.currentUser!.uid,
             context.read<MainViewModel>().currentUserName,
           );
-          context.read<ReactionViewModel>().currentUserReaction = widget.type;
+          context.read<ChatPageViewModel>().currentUserReaction = widget.type;
         },
         child: Container(
           padding: const EdgeInsets.all(8),

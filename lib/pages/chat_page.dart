@@ -9,6 +9,7 @@ import 'package:chatapp/pages/login_page.dart';
 import 'package:chatapp/service/auth_service.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/viewmodels/main_view_model.dart';
+import 'package:chatapp/viewmodels/chat_page_view_model.dart';
 import 'package:chatapp/widgets/alert.dart';
 import 'package:chatapp/widgets/custom_app_bar.dart';
 import 'package:chatapp/widgets/groups.dart';
@@ -24,9 +25,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({super.key, required this.viewModel});
+  const ChatPage({super.key, required this.mainViewModel, required this.chatPageViewModel});
 
-  final viewModel;
+  final MainViewModel mainViewModel;
+  final ChatPageViewModel chatPageViewModel;
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -50,6 +52,7 @@ class _ChatPageState extends State<ChatPage> {
   int messagesWhenButtonShown = 0;
 
   bool editingGroupName = false;
+  bool replying = false;
 
   @override
   void dispose() {
@@ -60,10 +63,13 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    print("build");
     String groupName = context.watch<MainViewModel>().selectedGroupName;
     groupID = context.watch<MainViewModel>().selectedGroupId;
     messages = context.watch<MainViewModel>().messages as Stream<QuerySnapshot<Object?>>?;
     groupMembers = context.watch<MainViewModel>().selectedGroupMembers;
+    String replyingToID = context.watch<ChatPageViewModel>().replyingToID;
+    replying = replyingToID != "";
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -184,7 +190,7 @@ class _ChatPageState extends State<ChatPage> {
                 barrierDismissible: true,
                 pageBuilder: ((context, animation, secondaryAnimation) => 
                   ChangeNotifierProvider<MainViewModel>.value(
-                    value: widget.viewModel, // Pass in the same viewmodel to this new view
+                    value: widget.mainViewModel, // Pass in the same viewmodel to this new view
                     child: const InfoPage(),
                   )
                 ),
@@ -213,13 +219,26 @@ class _ChatPageState extends State<ChatPage> {
                 child: Stack(
                   children: [
                     chatMessages(),
-                    Positioned(bottom: 0, left: 0, right: 0, child: messageSender()),
+                    Positioned(bottom: 0, left: 0, right: 0, 
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            key: ValueKey<bool>(showScrollButton), // updates when showScrollButton is changed!
+                            child: showScrollButton
+                              ? scrollButtonAndNotifier()
+                              : const SizedBox(height: 0, width: 0),
+                          ),
+                          replying ? ReplyToMessage(replyingToID: replyingToID) : Container(),
+                          messageSender()
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-              
       ),
     );
   }
@@ -255,63 +274,52 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   messageSender() {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.only(bottom: 8.0),
-          key: ValueKey<bool>(showScrollButton), // updates when showScrollButton is changed!
-          child: showScrollButton
-            ? scrollButtonAndNotifier()
-            : const SizedBox(height: 0, width: 0),
+    return Container(
+      padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color.fromARGB(0, 249, 249, 249), Consts.backgroundColor]),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Consts.foregroundColor,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [
+            BoxShadow(color: Color.fromARGB(24, 0, 0, 0), blurRadius: 8.0, offset: Offset(2, 4))
+          ]
         ),
-        Container(
-          padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 16.0),
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color.fromARGB(0, 249, 249, 249), Consts.backgroundColor]),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Consts.foregroundColor,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: const [
-                BoxShadow(color: Color.fromARGB(24, 0, 0, 0), blurRadius: 8.0, offset: Offset(2, 4))
-              ]
-            ),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: TextFormField(
-                    onFieldSubmitted: (e) {
-                      sendMessage();
-                    },
-                    // Allow enter to submit message
-                    keyboardType: TextInputType.text,
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: "Send a message...",
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.only(left: 16.0, top: 16.0, bottom: 16.0),
-                      isDense: true,
-                    ),
-                    minLines: 1,
-                    maxLines: 3,
-                  ),
+        child: Row(
+          children: <Widget>[
+            Expanded(
+              child: TextFormField(
+                onFieldSubmitted: (e) {
+                  sendMessage();
+                },
+                // Allow enter to submit message
+                keyboardType: TextInputType.text,
+                controller: _messageController,
+                decoration: const InputDecoration(
+                  hintText: "Send a message...",
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.only(left: 16.0, top: 16.0, bottom: 16.0),
+                  isDense: true,
                 ),
-                InkWell(
-                  onTap: () => sendMessage(),
-                  child: const Padding(
-                    padding: EdgeInsets.only(top: 16.0, right: 16.0, bottom: 16.0),
-                    child: Icon(
-                      Icons.send,
-                      color: Consts.sentColor, 
-                    ),
-                  ),
-                )
-              ],
+                minLines: 1,
+                maxLines: 3,
+              ),
+            ),
+            InkWell(
+              onTap: () => sendMessage(),
+              child: const Padding(
+                padding: EdgeInsets.only(top: 16.0, right: 16.0, bottom: 16.0),
+                child: Icon(
+                  Icons.send,
+                  color: Consts.sentColor, 
+                ),
+              ),
             )
-          ),
-        ),
-      ],
+          ],
+        )
+      ),
     );
   }
 
@@ -359,7 +367,7 @@ class _ChatPageState extends State<ChatPage> {
             itemCount: snapshot.data.docs.length + 1,
             itemBuilder: (context, index) {
               if(index == snapshot.data.docs.length) {
-                return const SizedBox(height: 86);
+                return SizedBox(height: context.read<ChatPageViewModel>().replyingToID == "" ? 86 : 86 + 50);
               }
               Map data = snapshot.data.docs[index].data();
               return Column(
@@ -378,9 +386,10 @@ class _ChatPageState extends State<ChatPage> {
                       timeStamp: data["timeStamp"],
                       messageID: data["id"],
                       reactions: data["reactions"],
+                      replyID: data["replyID"],
                       lastMessageTimeStamp: index > 0 ? snapshot.data.docs[index - 1]["timeStamp"] : 0,
-                      currentDisplayName: loggedInDisplayName,
-                      viewModel: widget.viewModel,
+                      mainViewModel: widget.mainViewModel,
+                      chatPageViewModel: widget.chatPageViewModel,
                     ),
                 ],
               );
@@ -423,5 +432,87 @@ class _ChatPageState extends State<ChatPage> {
         });
       });
     }
+  }
+}
+
+class ReplyToMessage extends StatelessWidget {
+  const ReplyToMessage({super.key, required this.replyingToID});
+  final String replyingToID;
+
+  @override
+  Widget build(BuildContext context) {
+    print("build");
+    Stream replyingToMessage = DatabaseService().getMessage(
+      context.read<MainViewModel>().selectedGroupId,
+      replyingToID,
+    );
+    return StreamBuilder(
+      stream: replyingToMessage,
+      builder: (context, snapshot) { 
+        if(snapshot.connectionState == ConnectionState.waiting) {
+          return Container();
+        }
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: Consts.sideMargin),
+          
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 16.0),
+                child: Text(
+                  "Replying to:",
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)
+                ),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  color: Consts.backgroundColor,
+                  borderRadius: const BorderRadius.all(Radius.circular(18)),
+                  boxShadow: const [
+                    BoxShadow(blurRadius: 8, offset: Offset(3, 6), color: Colors.black12)
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 16, top: 4, bottom: 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              snapshot.data.data()["sender"].toString(),
+                              style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700, color: Colors.black),
+                              overflow: TextOverflow.clip,
+                              maxLines: 1,
+                            ),
+                            Text(
+                              snapshot.data.data()["message"].toString(),
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade800),
+                              overflow: TextOverflow.clip,
+                              maxLines: 1,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    InkWell(
+                      onTap: () { context.read<ChatPageViewModel>().replyingToID = ""; },
+                      child: const Padding(
+                        padding: EdgeInsets.only(right: 16, top: 16, bottom: 16),
+                        child: Icon(Icons.close, color: Colors.black),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    );
   }
 }

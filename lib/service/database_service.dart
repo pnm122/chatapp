@@ -253,4 +253,8 @@ class DatabaseService {
       "reactions": FieldValue.arrayRemove(["${reactionType}_${uid}_$displayName"]),
     });
   }
+
+  Stream getMessage(String groupID, String messageID) {
+    return groupCollection.doc(groupID).collection("messages").doc(messageID).snapshots();
+  }
 }

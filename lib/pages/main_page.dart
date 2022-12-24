@@ -6,6 +6,7 @@ import 'package:chatapp/pages/info_page.dart';
 import 'package:chatapp/service/database_service.dart';
 import 'package:chatapp/viewmodels/main_view_model.dart';
 import 'package:chatapp/service/auth_service.dart';
+import 'package:chatapp/viewmodels/chat_page_view_model.dart';
 import 'package:chatapp/widgets/widgets.dart';
 
 import 'package:flutter/material.dart';
@@ -15,12 +16,13 @@ import 'dart:html' as html;
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key, required this.viewModel});
-  final viewModel;
+  final MainViewModel viewModel;
 
   @override
   Widget build(BuildContext context) {
     bool active = true;
     String selectedGroupId = context.read<MainViewModel>().selectedGroupId;
+    final ChatPageViewModel chatPageViewModel = ChatPageViewModel();
 
     html.window.onBeforeUnload.listen((event) async {
       active = false;
@@ -70,7 +72,10 @@ class MainPage extends StatelessWidget {
 
         // Use expanded so it doesn't overflow (bc the other row element is a sizedbox)
         Expanded(
-          child: ChatPage(viewModel: viewModel),
+          child: ChangeNotifierProvider(
+            create: (context) => chatPageViewModel,
+            child: ChatPage(mainViewModel: viewModel, chatPageViewModel: chatPageViewModel)
+          ),
         ),
       ],
     );
