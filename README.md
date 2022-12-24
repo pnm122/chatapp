@@ -4,9 +4,11 @@ A group-based chat application created by Pierce Martin
 
 ## Version 2.2.0
 
+* BUG FIXED: Constant redraws when the scroll button is showing
 * TODO: Clean up message page (separate things into widgets)
-* TODO: Replies to messages
+* Replies to messages
 * Reactions to messages
+* TODO: Choose a new font that can overflow properly
 
 ## Version 2.1.3 (Current)
 

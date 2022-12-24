@@ -48,7 +48,6 @@ class _ChatPageState extends State<ChatPage> {
 
   bool firstLoad = true;
   bool showScrollButton = false;
-  int notifs = 0;
   int messagesWhenButtonShown = 0;
 
   bool editingGroupName = false;
@@ -63,10 +62,9 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    print("build");
     String groupName = context.watch<MainViewModel>().selectedGroupName;
     groupID = context.watch<MainViewModel>().selectedGroupId;
-    messages = context.watch<MainViewModel>().messages as Stream<QuerySnapshot<Object?>>?;
+    messages = context.watch<MainViewModel>().messages;
     groupMembers = context.watch<MainViewModel>().selectedGroupMembers;
     String replyingToID = context.watch<ChatPageViewModel>().replyingToID;
     replying = replyingToID != "";
@@ -222,13 +220,7 @@ class _ChatPageState extends State<ChatPage> {
                     Positioned(bottom: 0, left: 0, right: 0, 
                       child: Column(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            key: ValueKey<bool>(showScrollButton), // updates when showScrollButton is changed!
-                            child: showScrollButton
-                              ? scrollButtonAndNotifier()
-                              : const SizedBox(height: 0, width: 0),
-                          ),
+                          showScrollButton ? scrollButtonAndNotifier() : Container(),
                           replying ? ReplyToMessage(replyingToID: replyingToID) : Container(),
                           messageSender()
                         ],
@@ -244,30 +236,43 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   scrollButtonAndNotifier() {
-    return Tooltip(
-      preferBelow: false,
-      margin: const EdgeInsets.all(4.0),
-      decoration: BoxDecoration(color: Consts.toolTipColor),
-      message: "Scroll to bottom",
-      child: InkWell(
-        onTap: () => animateToBottom(),
-        child: Badge(
-          key: ValueKey<int>(notifs),
-          position: BadgePosition.topEnd(),
-          showBadge: notifs > 0,
-          badgeContent: Text(
-            notifs.toString(),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(12.0),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(999),
-            ),
-        
-            child: const Icon(Icons.arrow_downward, color: Colors.white)
-          ),
+    return Padding(
+      padding: EdgeInsets.all(replying ? 0 : 8),
+      child: Tooltip(
+        preferBelow: false,
+        margin: const EdgeInsets.all(4.0),
+        decoration: BoxDecoration(color: Consts.toolTipColor),
+        message: "Scroll to bottom",
+        child: StreamBuilder(
+          stream: messages,
+          builder: (context, snapshot) {
+            int numNewMessages = 0;
+            if(snapshot.hasData) numNewMessages = snapshot.data!.docs.length - messagesWhenButtonShown;
+
+            return InkWell(
+              onTap: () => animateToBottom(),
+              child: Badge(
+                position: BadgePosition.topEnd(),
+                showBadge: numNewMessages > 0,
+                badgeContent: Text(
+                  numNewMessages.toString(),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(12.0),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: BoxShape.circle,
+                    boxShadow: const [
+                      BoxShadow(blurRadius: 16, offset: Offset(2, 4), color: Colors.black12)
+                    ],
+                  ),
+              
+                  child: const Icon(Icons.arrow_downward, color: Colors.white)
+                ),
+              ),
+            );
+          }
         ),
       ),
     );
@@ -336,12 +341,7 @@ class _ChatPageState extends State<ChatPage> {
         // Called on initial load and after new messages are sent by any user
         SchedulerBinding.instance.addPostFrameCallback((_) {
           if(wait) { wait = false; return; } // Don't scroll to bottom directly after getting rid of the scroll button
-          if(showScrollButton) { 
-            setState(() {
-              notifs = snapshot.data.docs.length - messagesWhenButtonShown;
-            });
-            return; 
-          }
+          if(showScrollButton) return;
           if(_scrollController.hasClients) {
             // jump to bottom when the page loads for the first time, otherwise animate the scroll
             if(firstLoad) { firstLoad = false; jumpToBottom(); }
@@ -354,7 +354,7 @@ class _ChatPageState extends State<ChatPage> {
           onNotification: (scroll) {
             double dist = _scrollController.position.maxScrollExtent - scroll.metrics.pixels;
             if(dist > Consts.showScrollButtonHeight && showScrollButton == false) {
-              setState(() {showScrollButton = true; notifs = 0; messagesWhenButtonShown = snapshot.data.docs.length; });
+              setState(() {showScrollButton = true; messagesWhenButtonShown = snapshot.data.docs.length; });
             } else if(dist < Consts.showScrollButtonHeight && showScrollButton == true) {
               setState(() {showScrollButton = false; wait = true; });
             } 
@@ -386,7 +386,9 @@ class _ChatPageState extends State<ChatPage> {
                       timeStamp: data["timeStamp"],
                       messageID: data["id"],
                       reactions: data["reactions"],
-                      replyID: data["replyID"],
+                      replyMessage: data["replyMessage"],
+                      replySender: data["replySender"],
+                      replyTimeStamp: data["replyTimeStamp"],
                       lastMessageTimeStamp: index > 0 ? snapshot.data.docs[index - 1]["timeStamp"] : 0,
                       mainViewModel: widget.mainViewModel,
                       chatPageViewModel: widget.chatPageViewModel,
@@ -425,6 +427,16 @@ class _ChatPageState extends State<ChatPage> {
         "timeStamp": Timestamp.now().millisecondsSinceEpoch,
         "reactions": []
       };
+      if(replying) {
+        ChatPageViewModel vm = context.read<ChatPageViewModel>();
+        Map<String, dynamic> replyMap = {
+          "replyMessage": vm.replyingToMessage,
+          "replySender": vm.replyingToSender,
+          "replyTimeStamp": vm.replyingToTimeStamp
+        };
+        messageMap.addAll(replyMap);
+        context.read<ChatPageViewModel>().replyingToID = "";
+      }
 
       DatabaseService().sendMessage(groupID, messageMap).then((_) {
         setState(() {
@@ -441,7 +453,6 @@ class ReplyToMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("build");
     Stream replyingToMessage = DatabaseService().getMessage(
       context.read<MainViewModel>().selectedGroupId,
       replyingToID,
@@ -449,67 +460,60 @@ class ReplyToMessage extends StatelessWidget {
     return StreamBuilder(
       stream: replyingToMessage,
       builder: (context, snapshot) { 
-        if(snapshot.connectionState == ConnectionState.waiting) {
-          return Container();
+        bool waiting = snapshot.connectionState == ConnectionState.waiting;
+        if(!waiting) {
+          Map info = snapshot.data.data();
+          context.read<ChatPageViewModel>().setReplyMessage(
+            info["message"], 
+            info["sender"], 
+            info["timeStamp"]
+          );
         }
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: Consts.sideMargin),
           
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0),
-                child: Text(
-                  "Replying to:",
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  color: Consts.backgroundColor,
-                  borderRadius: const BorderRadius.all(Radius.circular(18)),
-                  boxShadow: const [
-                    BoxShadow(blurRadius: 8, offset: Offset(3, 6), color: Colors.black12)
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 16, top: 4, bottom: 4),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              snapshot.data.data()["sender"].toString(),
-                              style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700, color: Colors.black),
-                              overflow: TextOverflow.clip,
-                              maxLines: 1,
-                            ),
-                            Text(
-                              snapshot.data.data()["message"].toString(),
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade800),
-                              overflow: TextOverflow.clip,
-                              maxLines: 1,
-                            ),
-                          ],
-                        ),
-                      ),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              color: Consts.backgroundColor,
+              borderRadius: const BorderRadius.all(Radius.circular(18)),
+              boxShadow: const [
+                BoxShadow(blurRadius: 16, offset: Offset(2, 4), color: Colors.black12)
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 16, top: 4, bottom: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        !waiting ? Text(
+                          "Replying to ${snapshot.data.data()["sender"].toString()}:",
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700, color: Colors.black),
+                          overflow: TextOverflow.clip,
+                          maxLines: 1,
+                        ) : Container(),
+                        !waiting ? Text(
+                          snapshot.data.data()["message"].toString(),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade800),
+                          overflow: TextOverflow.clip,
+                          maxLines: 1,
+                        ) : Container(),
+                      ],
                     ),
-                    InkWell(
-                      onTap: () { context.read<ChatPageViewModel>().replyingToID = ""; },
-                      child: const Padding(
-                        padding: EdgeInsets.only(right: 16, top: 16, bottom: 16),
-                        child: Icon(Icons.close, color: Colors.black),
-                      ),
-                    )
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                InkWell(
+                  onTap: () { context.read<ChatPageViewModel>().replyingToID = ""; },
+                  child: const Padding(
+                    padding: EdgeInsets.only(right: 16, top: 16, bottom: 16),
+                    child: Icon(Icons.close, color: Colors.black),
+                  ),
+                )
+              ],
+            ),
           ),
         );
       }

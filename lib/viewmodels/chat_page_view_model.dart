@@ -5,10 +5,16 @@ class ChatPageViewModel with ChangeNotifier {
   String _selectedMessageReaction = "";
   String _selectedMessageID = "";
   String _replyingToID = "";
+  String _replyingToMessage = "";
+  String _replyingToSender = "";
+  int _replyingToTimeStamp = -1;
 
   String get selectedMessageReaction => _selectedMessageReaction;
   String get replyingToID => _replyingToID;
   String get selectedMessageID => _selectedMessageID;
+  String get replyingToMessage => _replyingToMessage;
+  String get replyingToSender => _replyingToSender;
+  int get replyingToTimeStamp => _replyingToTimeStamp;
 
   set currentUserReaction(reactionType) {
     _selectedMessageReaction = reactionType;
@@ -18,6 +24,12 @@ class ChatPageViewModel with ChangeNotifier {
   set replyingToID(messageID) {
     _replyingToID = messageID;
     notifyListeners();
+  }
+
+  void setReplyMessage(replyingToMessage, replyingToSender, replyingToTimeStamp) {
+    _replyingToMessage = replyingToMessage;
+    _replyingToSender = replyingToSender;
+    _replyingToTimeStamp = replyingToTimeStamp;
   }
 
   void setSelectedMessage(String messageID, List? reactions) {

@@ -22,7 +22,9 @@ class Message extends StatelessWidget {
     required this.timeStamp, 
     required this.messageID,
     required this.reactions,
-    required this.replyID,
+    this.replyMessage,
+    this.replySender,
+    this.replyTimeStamp,
     required this.lastMessageTimeStamp,
     required this.mainViewModel,
     required this.chatPageViewModel,
@@ -41,8 +43,10 @@ class Message extends StatelessWidget {
   final String? messageID;
   // list of reactions to this message
   final List reactions;
-  // ID of the message this message is replying to
-  final String? replyID;
+  // Reply info
+  final String? replyMessage;
+  final String? replySender;
+  final int? replyTimeStamp;
   // time the message before this message was sent. used to figure out what padding to use/if the name should appear with the message
   final int lastMessageTimeStamp;
   // MainViewModel instance which gets passed into the new screen created on long pressing a message
@@ -73,7 +77,15 @@ class Message extends StatelessWidget {
                       sender,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Consts.senderColor),
                     ),
+
                     const SizedBox(height: 4.0),
+                    replyMessage != null ? InnerReply(
+                      replyMessage: replyMessage!, 
+                      replySender: replySender!, 
+                      replyTimeStamp: replyTimeStamp!, 
+                      messageSentByMe: sentByMe
+                    ) : Container(),
+
                     GestureDetector(
                       onLongPressStart: (details) {
                         // Takes time to assign ID to just-sent messages, which is used for replying
@@ -251,7 +263,7 @@ class OnMessageReactions extends StatelessWidget {
             children: [
               Tooltip(
                 message: names,
-                verticalOffset: 12,
+                verticalOffset: 14,
                 decoration: const BoxDecoration(
                   color: Consts.toolTipColor,
                 ),
@@ -452,6 +464,65 @@ class _MessageDropdownOptionState extends State<MessageDropdownOption> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class InnerReply extends StatelessWidget {
+  const InnerReply({super.key, required this.replyMessage, required this.replySender, required this.replyTimeStamp, required this.messageSentByMe});
+  final String replyMessage;
+  final String replySender;
+  final int replyTimeStamp;
+  final bool messageSentByMe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: messageSentByMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      children: [
+        Container(
+          constraints: const BoxConstraints(maxWidth: 350, minHeight: 40),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SelectableText(
+                    replySender,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w700, color: Colors.black),
+                  ),
+                  const SizedBox(width: 4),
+                  SelectableText(
+                    HelperFunctions.timeStampToStringShort(replyTimeStamp),
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.grey),
+                  ),
+                ],
+              ),
+              SelectableText(
+                replyMessage,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade800),
+              )
+            ],
+          ),
+        ),
+        Container(
+          width: 18,
+          height: 18,
+          margin: const EdgeInsets.symmetric(vertical: 4),
+          decoration: BoxDecoration(
+            border: Border(
+              left: messageSentByMe ? BorderSide(color: Colors.grey.shade300, width: 2) : BorderSide.none,
+              right: messageSentByMe ? BorderSide.none : BorderSide(color: Colors.grey.shade300, width: 2),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
